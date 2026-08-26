@@ -69,7 +69,7 @@ export default async function handler(req) {
       if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang GROQ_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.groq.com/openai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'llama-3.3-70b-versatile', messages: cleanMessages };
+      fetchBody = { model: 'gemma2-9b-it', messages: cleanMessages };
     } 
 
     // 4. DEEPSEEK
@@ -94,9 +94,12 @@ export default async function handler(req) {
     else if (provider === 'huggingface') {
       const key = keys.huggingface;
       if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
-      fetchUrl = 'https://router.huggingface.co/hf-inference/v1/chat/completions';
+      fetchUrl = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'Qwen/Qwen2.5-72B-Instruct', messages: cleanMessages };
+      fetchBody = {
+        inputs: lastUserMessage,
+        parameters: { max_new_tokens: 500 }
+      };
     } 
 
     // 7. COHERE
