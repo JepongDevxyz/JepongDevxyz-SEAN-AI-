@@ -76,7 +76,7 @@ export default async function handler(req) {
       if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
       fetchUrl = 'https://router.huggingface.co/hf-inference/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'qwen/qwen3.6-27b', messages: cleanMessages };
+      fetchBody = { model: 'openai/gpt-oss-20b', messages: cleanMessages };
     } 
 
     // 5. COHERE
