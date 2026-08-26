@@ -41,11 +41,11 @@ export default async function handler(req) {
     let fetchHeaders = { 'Content-Type': 'application/json' };
     let fetchBody = {};
 
-    // 1. GEMINI (Corrected Endpoint & Model String)
+    // 1. GEMINI (Corrected Model Endpoint: gemini-2.0-flash)
     if (provider === 'gemini') {
       const key = keys.gemini;
       if (!key) return new Response('[GEMINI ERROR]: Walang GEMINI_API_KEYS.', { status: 200 });
-      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`;
+      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
       fetchBody = {
         contents: messages.map(m => ({
           role: m.role === 'user' ? 'user' : 'model',
@@ -53,25 +53,25 @@ export default async function handler(req) {
         }))
       };
     } 
-    
+
     // 2. OPENAI
     else if (provider === 'openai') {
       const key = keys.openai;
       if (!key) return new Response('[OPENAI ERROR]: Walang OPENAI_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.openai.com/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'gpt-3.5-turbo', messages: cleanMessages };
+      fetchBody = { model: 'gpt-4o-mini', messages: cleanMessages };
     } 
-    
-    // 3. LLAMA / GROQ (Corrected Active Model Name)
+
+    // 3. LLAMA / GROQ (Active Model: llama-3.1-8b-instant)
     else if (provider === 'llama') {
       const key = keys.groq;
       if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang GROQ_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.groq.com/openai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'llama3-8b-8192', messages: cleanMessages };
+      fetchBody = { model: 'llama-3.1-8b-instant', messages: cleanMessages };
     } 
-    
+
     // 4. DEEPSEEK
     else if (provider === 'deepseek') {
       const key = keys.deepseek;
@@ -80,7 +80,7 @@ export default async function handler(req) {
       fetchHeaders['Authorization'] = `Bearer ${key}`;
       fetchBody = { model: 'deepseek-chat', messages: cleanMessages };
     } 
-    
+
     // 5. MISTRAL
     else if (provider === 'mistral') {
       const key = keys.mistral;
@@ -89,16 +89,16 @@ export default async function handler(req) {
       fetchHeaders['Authorization'] = `Bearer ${key}`;
       fetchBody = { model: 'mistral-small-latest', messages: cleanMessages };
     } 
-    
-    // 6. HUGGINGFACE
+
+    // 6. HUGGINGFACE (Updated Router Endpoint)
     else if (provider === 'huggingface') {
       const key = keys.huggingface;
       if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
-      fetchUrl = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2/v1/chat/completions';
+      fetchUrl = 'https://router.huggingface.co/hf-inference/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'mistralai/Mistral-7B-Instruct-v0.2', messages: cleanMessages };
+      fetchBody = { model: 'Qwen/Qwen2.5-Coder-32B-Instruct', messages: cleanMessages };
     } 
-    
+
     // 7. COHERE
     else if (provider === 'cohere') {
       const key = keys.cohere;
