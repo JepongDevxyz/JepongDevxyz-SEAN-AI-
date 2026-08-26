@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.E.A.N. - AI Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+        }
+        
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .recording {
+            animation: pulse-red 1.5s infinite;
+            background-color: #ef4444 !important;
+            color: white !important;
+        }
+
+        .prose pre {
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .prose code {
+            color: #f3f4f6;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-gray-800 p-4 flex justify-between items-center border-b border-gray-700">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-robot text-indigo-500 text-2xl"></i>
+            <span class="font-bold text-lg tracking-wide">S.E.A.N.</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="text-xs bg-gray-700 px-2.5 py-1 rounded-full flex items-center space-x-1.5 border border-gray-600">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span id="pingDisplayMobile" class="text-gray-300 font-mono">-- ms</span>
+            </div>
+            <button id="mobileMenuBtn" class="text-gray-300 hover:text-white focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-gray-800 border-r border-gray-700 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between md:static">
+        <div class="p-4 flex flex-col h-full">
+            <div class="hidden md:flex items-center justify-between mb-6 px-2">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-robot text-indigo-500 text-2xl"></i>
+                    <span class="font-bold text-xl tracking-wide">S.E.A.N.</span>
+                </div>
+                <div class="text-xs bg-gray-700 px-2.5 py-1 rounded-full flex items-center space-x-1.5 border border-gray-600" title="API Response Latency">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="pingDisplayDesktop" class="text-gray-300 font-mono">-- ms</span>
+                </div>
+            </div>
+
+            <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition duration-200 mb-4 shadow-md">
+                <i class="fa-solid fa-plus"></i>
+                <span>New Chat</span>
+            </button>
+
+            <div class="mb-4 space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">AI Model Provider</label>
+                    <select id="providerSelect" class="w-full bg-gray-700 text-white text-sm rounded-lg border border-gray-600 p-2.5 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="openai">OpenAI (ChatGPT)</option>
+                        <option value="llama">Meta Llama (Groq)</option>
+                        <option value="deepseek">DeepSeek</option>
+                        <option value="mistral">Mistral AI</option>
+                        <option value="cohere">Cohere (Command R+)</option>
+                        <option value="huggingface">Hugging Face (Qwen 2.5)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto mb-4">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">History</div>
+                <div id="chatHistory" class="space-y-1"></div>
+            </div>
+
+            <div class="pt-2 border-t border-gray-700">
+                <button onclick="clearAllHistory()" class="w-full text-left text-sm text-gray-400 hover:text-red-400 p-2 rounded flex items-center space-x-2 transition duration-150">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Clear All History</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Main Chat Area -->
+    <main class="flex-1 flex flex-col h-full bg-gray-900 relative">
+        <div id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+            <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
+                <div class="bg-gray-800 p-4 rounded-full mb-4 border border-gray-700">
+                    <i class="fa-solid fa-brain text-4xl text-indigo-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Kumusta! Ako si S.E.A.N.</h2>
+                <p class="max-w-md text-sm">Ang iyong AI assistant. Magtanong ng kahit ano o humingi ng tulong sa coding.</p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-gray-800 border-t border-gray-700">
+            <div class="max-w-4xl mx-auto relative flex items-center bg-gray-700 rounded-xl border border-gray-600 focus-within:border-indigo-500 transition duration-200">
+                <button id="micBtn" onclick="toggleSpeechRecognition()" class="p-3 text-gray-400 hover:text-white transition duration-150 focus:outline-none rounded-lg" title="Voice Input">
+                    <i class="fa-solid fa-microphone text-lg"></i>
+                </button>
+
+                <textarea id="userInput" rows="1" placeholder="Mag-type ng mensahe..." class="w-full bg-transparent text-white p-3 focus:outline-none resize-none max-h-32 text-sm md:text-base" onkeydown="handleKeyDown(event)"></textarea>
+
+                <button id="sendBtn" onclick="sendMessage()" class="p-3 text-indigo-400 hover:text-indigo-300 transition duration-150 focus:outline-none" title="Send message">
+                    <i class="fa-solid fa-paper-plane text-lg"></i>
+                </button>
+            </div>
+            <div class="text-center text-xs text-gray-500 mt-2">
+                S.E.A.N. can make mistakes. Verify important information.
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let chatSessions = JSON.parse(localStorage.getItem('sean_chat_sessions') || '{}');
+        let currentSessionId = null;
+        let recognition = null;
+        let isRecording = false;
+
+        marked.setOptions({
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            langPrefix: 'hljs language-'
+        });
+
+        function updatePingUI(pingTimeMs) {
+            const mobileEl = document.getElementById('pingDisplayMobile');
+            const desktopEl = document.getElementById('pingDisplayDesktop');
+            const text = pingTimeMs + ' ms';
+            if (mobileEl) mobileEl.innerText = text;
+            if (desktopEl) desktopEl.innerText = text;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupMobileMenu();
+            setupVoiceRecognition();
+            
+            const tx = document.getElementById('userInput');
+            tx.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            const sessionKeys = Object.keys(chatSessions);
+            if (sessionKeys.length > 0) {
+                loadChatSession(sessionKeys[sessionKeys.length - 1]);
+            } else {
+                createNewChat();
+            }
+        });
+
+        function setupMobileMenu() {
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            }
+
+            menuBtn.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+        }
+
+        function setupVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'tl-PH';
+
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('userInput').value += transcript;
+                    stopRecording();
+                };
+
+                recognition.onerror = function() { stopRecording(); };
+                recognition.onend = function() { stopRecording(); };
+            }
+        }
+
+        function toggleSpeechRecognition() {
+            if (!recognition) return alert('Speech recognition is not supported in this browser.');
+            const micBtn = document.getElementById('micBtn');
+            if (!isRecording) {
+                recognition.start();
+                isRecording = true;
+                micBtn.classList.add('recording');
+            } else {
+                recognition.stop();
+                stopRecording();
+            }
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) micBtn.classList.remove('recording');
+        }
+
+        function createNewChat() {
+            currentSessionId = 'session_' + Date.now();
+            chatSessions[currentSessionId] = { title: 'New Chat', messages: [] };
+            saveSessionsToStorage();
+            renderHistoryList();
+            clearChatDisplay();
+        }
+
+        function loadChatSession(id) {
+            if (!chatSessions[id]) return;
+            currentSessionId = id;
+            renderHistoryList();
+            renderChatMessages();
+        }
+
+        function deleteSession(id, event) {
+            event.stopPropagation();
+            delete chatSessions[id];
+            saveSessionsToStorage();
+            const keys = Object.keys(chatSessions);
+            if (keys.length > 0) loadChatSession(keys[keys.length - 1]);
+            else createNewChat();
+        }
+
+        function clearAllHistory() {
+            if (confirm('Are you sure you want to clear all chat history?')) {
+                chatSessions = {};
+                saveSessionsToStorage();
+                createNewChat();
+            }
+        }
+
+        function saveSessionsToStorage() {
+            localStorage.setItem('sean_chat_sessions', JSON.stringify(chatSessions));
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('chatHistory');
+            container.innerHTML = '';
+            
+            Object.keys(chatSessions).reverse().forEach(id => {
+                const session = chatSessions[id];
+                const isActive = id === currentSessionId;
+                const item = document.createElement('div');
+                item.className = `group flex items-center justify-between p-2 rounded-lg cursor-pointer text-sm transition duration-150 ${isActive ? 'bg-gray-700 text-white font-medium' : 'text-gray-400 hover:bg-gray-750 hover:text-gray-200'}`;
+                item.onclick = () => loadChatSession(id);
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2 truncate">
+                        <i class="fa-regular fa-message text-xs"></i>
+                        <span class="truncate">${escapeHtml(session.title)}</span>
+                    </div>
+                    <button onclick="deleteSession('${id}', event)" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1 transition duration-150">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function clearChatDisplay() {
+            document.getElementById('chatBox').innerHTML = `
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
+                    <div class="bg-gray-800 p-4 rounded-full mb-4 border border-gray-700">
+                        <i class="fa-solid fa-brain text-4xl text-indigo-500"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Kumusta! Ako si S.E.A.N.</h2>
+                    <p class="max-w-md text-sm">Ang iyong AI assistant. Magtanong ng kahit ano o humingi ng tulong sa coding.</p>
+                </div>
+            `;
+        }
+
+        function renderChatMessages() {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML = '';
+            const session = chatSessions[currentSessionId];
+            if (!session || session.messages.length === 0) {
+                clearChatDisplay();
+                return;
+            }
+            session.messages.forEach(msg => appendMessageToUI(msg.role, msg.content));
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) welcome.remove();
+
+            const session = chatSessions[currentSessionId];
+            if (session.messages.length === 0) {
+                session.title = text.substring(0, 24);
+                renderHistoryList();
+            }
+
+            session.messages.push({ role: 'user', content: text });
+            appendMessageToUI('user', text);
+
+            input.value = '';
+            input.style.height = 'auto';
+
+            const chatBox = document.getElementById('chatBox');
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            await handleChatStream();
+            saveSessionsToStorage();
+        }
+
+        async function handleChatStream() {
+            const session = chatSessions[currentSessionId];
+            const provider = document.getElementById('providerSelect').value;
+            const aiMsgContainer = appendMessageToUI('assistant', '');
+            const contentDiv = aiMsgContainer.querySelector('.message-content');
+            
+            let accumulatedText = '';
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        messages: session.messages,
+                        provider: provider
+                    })
+                });
+
+                if (!response.ok) throw new Error('API Request Failed');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let firstChunkReceived = false;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    if (!firstChunkReceived) {
+                        const pingTime = Math.round(performance.now() - startTime);
+                        updatePingUI(pingTime);
+                        firstChunkReceived = true;
+                    }
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    accumulatedText += chunk;
+                    contentDiv.innerHTML = marked.parse(accumulatedText);
+                    document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+                    document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+                }
+
+                session.messages.push({ role: 'assistant', content: accumulatedText });
+
+            } catch (err) {
+                contentDiv.innerHTML = `<span class="text-red-400">Error: Nagkaroon ng problema sa pagproseso ng iyong request.</span>`;
+            }
+        }
+
+        function appendMessageToUI(role, content) {
+            const chatBox = document.getElementById('chatBox');
+            const wrapper = document.createElement('div');
+            const isUser = role === 'user';
+            wrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`;
+
+            wrapper.innerHTML = `
+                <div class="flex max-w-3xl ${isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'} space-x-3 items-start">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser ? 'bg-indigo-600' : 'bg-gray-700 border border-gray-600'} text-xs font-bold text-white">
+                        ${isUser ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot text-indigo-400"></i>'}
+                    </div>
+                    <div class="p-4 rounded-2xl ${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-gray-800 text-gray-100 border border-gray-700 rounded-tl-none'} shadow">
+                        <div class="message-content prose prose-invert max-w-none text-sm md:text-base leading-relaxed">
+                            ${content ? marked.parse(content) : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            chatBox.appendChild(wrapper);
+            document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+            return wrapper;
+        }
+
+        function escapeHtml(str) {
+      
