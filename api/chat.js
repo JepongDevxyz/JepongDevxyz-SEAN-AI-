@@ -29,12 +29,10 @@ export default async function handler(req) {
 
     const keys = {
       cohere: parseKey(process.env.COHERE_API_KEYS),
-      deepseek: parseKey(process.env.DEEPSEEK_API_KEYS),
       gemini: parseKey(process.env.GEMINI_API_KEYS),
       groq: parseKey(process.env.GROQ_API_KEYS),
       huggingface: parseKey(process.env.HUGGINGFACE_API_KEYS),
       mistral: parseKey(process.env.MISTRAL_API_KEYS),
-      openai: parseKey(process.env.OPENAI_API_KEYS),
     };
 
     let fetchUrl = '';
@@ -54,34 +52,16 @@ export default async function handler(req) {
       };
     } 
 
-    // 2. OPENAI
-    else if (provider === 'openai') {
-      const key = keys.openai;
-      if (!key) return new Response('[OPENAI ERROR]: Walang OPENAI_API_KEYS.', { status: 200 });
-      fetchUrl = 'https://api.openai.com/v1/chat/completions';
-      fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'gpt-4o-mini', messages: cleanMessages };
-    } 
-
-    // 3. LLAMA / GROQ (Gamitin ang stable gemma2-9b-it model)
+    // 2. LLAMA / GROQ
     else if (provider === 'llama') {
       const key = keys.groq;
       if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang GROQ_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.groq.com/openai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'openai/gpt-oss-20b', messages: cleanMessages };
+      fetchBody = { model: 'openai/gpt-oss-120b', messages: cleanMessages };
     } 
 
-    // 4. DEEPSEEK
-    else if (provider === 'deepseek') {
-      const key = keys.deepseek;
-      if (!key) return new Response('[DEEPSEEK ERROR]: Walang DEEPSEEK_API_KEYS.', { status: 200 });
-      fetchUrl = 'https://api.deepseek.com/chat/completions';
-      fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'deepseek-chat', messages: cleanMessages };
-    } 
-
-    // 5. MISTRAL
+    // 3. MISTRAL
     else if (provider === 'mistral') {
       const key = keys.mistral;
       if (!key) return new Response('[MISTRAL ERROR]: Walang MISTRAL_API_KEYS.', { status: 200 });
@@ -90,19 +70,16 @@ export default async function handler(req) {
       fetchBody = { model: 'mistral-small-latest', messages: cleanMessages };
     } 
 
-    // 6. HUGGINGFACE (Direct Inference Endpoint)
+    // 4. HUGGINGFACE
     else if (provider === 'huggingface') {
       const key = keys.huggingface;
       if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
-      fetchUrl = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
+      fetchUrl = 'https://router.huggingface.co/hf-inference/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = {
-        inputs: lastUserMessage,
-        parameters: { max_new_tokens: 500 }
-      };
+      fetchBody = { model: 'qwen/qwen3.6-27b', messages: cleanMessages };
     } 
 
-    // 7. COHERE
+    // 5. COHERE
     else if (provider === 'cohere') {
       const key = keys.cohere;
       if (!key) return new Response('[COHERE ERROR]: Walang COHERE_API_KEYS.', { status: 200 });
@@ -141,10 +118,8 @@ export default async function handler(req) {
     let textOutput = '';
     if (provider === 'gemini') {
       textOutput = parsedData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    } else if (['openai', 'llama', 'deepseek', 'mistral'].includes(provider)) {
+    } else if (['llama', 'mistral', 'huggingface'].includes(provider)) {
       textOutput = parsedData.choices?.[0]?.message?.content || '';
-    } else if (provider === 'huggingface') {
-      textOutput = Array.isArray(parsedData) ? parsedData[0]?.generated_text : (parsedData.choices?.[0]?.message?.content || parsedData.generated_text || '');
     } else if (provider === 'cohere') {
       textOutput = parsedData.text || '';
     }
