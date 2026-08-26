@@ -41,49 +41,68 @@ export default async function handler(req) {
     let fetchHeaders = { 'Content-Type': 'application/json' };
     let fetchBody = {};
 
+    // 1. GEMINI (Corrected Endpoint & Model String)
     if (provider === 'gemini') {
       const key = keys.gemini;
-      if (!key) return new Response('[GEMINI ERROR]: Walang GEMINI_API_KEYS na nahanap sa Environment Variables.', { status: 200 });
-      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+      if (!key) return new Response('[GEMINI ERROR]: Walang GEMINI_API_KEYS.', { status: 200 });
+      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`;
       fetchBody = {
         contents: messages.map(m => ({
           role: m.role === 'user' ? 'user' : 'model',
           parts: [{ text: String(m.content || '') }]
         }))
       };
-    } else if (provider === 'openai') {
+    } 
+    
+    // 2. OPENAI
+    else if (provider === 'openai') {
       const key = keys.openai;
-      if (!key) return new Response('[OPENAI ERROR]: Walang OPENAI_API_KEYS na nahanap sa Environment Variables.', { status: 200 });
+      if (!key) return new Response('[OPENAI ERROR]: Walang OPENAI_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.openai.com/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'gpt-4o-mini', messages: cleanMessages };
-    } else if (provider === 'llama') {
+      fetchBody = { model: 'gpt-3.5-turbo', messages: cleanMessages };
+    } 
+    
+    // 3. LLAMA / GROQ (Corrected Active Model Name)
+    else if (provider === 'llama') {
       const key = keys.groq;
-      if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang GROQ_API_KEYS na nahanap sa Environment Variables.', { status: 200 });
+      if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang GROQ_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.groq.com/openai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'llama-3.3-70b-versatile', messages: cleanMessages };
-    } else if (provider === 'deepseek') {
+      fetchBody = { model: 'llama3-8b-8192', messages: cleanMessages };
+    } 
+    
+    // 4. DEEPSEEK
+    else if (provider === 'deepseek') {
       const key = keys.deepseek;
-      if (!key) return new Response('[DEEPSEEK ERROR]: Walang DEEPSEEK_API_KEYS na nahanap sa Environment Variables.', { status: 200 });
+      if (!key) return new Response('[DEEPSEEK ERROR]: Walang DEEPSEEK_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.deepseek.com/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
       fetchBody = { model: 'deepseek-chat', messages: cleanMessages };
-    } else if (provider === 'mistral') {
+    } 
+    
+    // 5. MISTRAL
+    else if (provider === 'mistral') {
       const key = keys.mistral;
-      if (!key) return new Response('[MISTRAL ERROR]: Walang MISTRAL_API_KEYS na nahanap sa Environment Variables.', { status: 200 });
+      if (!key) return new Response('[MISTRAL ERROR]: Walang MISTRAL_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.mistral.ai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
       fetchBody = { model: 'mistral-small-latest', messages: cleanMessages };
-    } else if (provider === 'huggingface') {
+    } 
+    
+    // 6. HUGGINGFACE
+    else if (provider === 'huggingface') {
       const key = keys.huggingface;
-      if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS na nahanap sa Environment Variables.', { status: 200 });
-      fetchUrl = 'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1/chat/completions';
+      if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
+      fetchUrl = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'Qwen/Qwen2.5-72B-Instruct', messages: cleanMessages };
-    } else if (provider === 'cohere') {
+      fetchBody = { model: 'mistralai/Mistral-7B-Instruct-v0.2', messages: cleanMessages };
+    } 
+    
+    // 7. COHERE
+    else if (provider === 'cohere') {
       const key = keys.cohere;
-      if (!key) return new Response('[COHERE ERROR]: Walang COHERE_API_KEYS na nahanap sa Environment Variables.', { status: 200 });
+      if (!key) return new Response('[COHERE ERROR]: Walang COHERE_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.cohere.com/v1/chat';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
       fetchBody = {
@@ -106,8 +125,7 @@ export default async function handler(req) {
     const resText = await res.text();
 
     if (!res.ok) {
-      // Ipapalabas ang mismong dahilan mula sa API provider diretso sa chatbox
-      return new Response(`[${provider.toUpperCase()} API RETURNED ERROR ${res.status}]: ${resText}`, { status: 200 });
+      return new Response(`[${provider.toUpperCase()} ERROR ${res.status}]: ${resText}`, { status: 200 });
     }
 
     let parsedData;
@@ -126,11 +144,11 @@ export default async function handler(req) {
       textOutput = parsedData.text || '';
     }
 
-    return new Response(textOutput || `[${provider.toUpperCase()}]: Walang nilalaman ang nakuha sa response.`, {
+    return new Response(textOutput || `[${provider.toUpperCase()}]: Walang text response.`, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' }
     });
 
   } catch (err) {
-    return new Response(`[SERVER CATCH ERROR]: ${err.message}`, { status: 200 });
+    return new Response(`[SERVER ERROR]: ${err.message}`, { status: 200 });
   }
 }
