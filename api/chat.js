@@ -41,11 +41,11 @@ export default async function handler(req) {
     let fetchHeaders = { 'Content-Type': 'application/json' };
     let fetchBody = {};
 
-    // 1. GEMINI (Corrected Model Endpoint: gemini-2.0-flash)
+    // 1. GEMINI (Updated model to gemini-2.5-flash as instructed by API response)
     if (provider === 'gemini') {
       const key = keys.gemini;
       if (!key) return new Response('[GEMINI ERROR]: Walang GEMINI_API_KEYS.', { status: 200 });
-      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
       fetchBody = {
         contents: messages.map(m => ({
           role: m.role === 'user' ? 'user' : 'model',
@@ -63,13 +63,13 @@ export default async function handler(req) {
       fetchBody = { model: 'gpt-4o-mini', messages: cleanMessages };
     } 
 
-    // 3. LLAMA / GROQ (Active Model: llama-3.1-8b-instant)
+    // 3. LLAMA / GROQ (Updated active model: llama-3.3-70b-versatile)
     else if (provider === 'llama') {
       const key = keys.groq;
       if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang GROQ_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.groq.com/openai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'llama-3.1-8b-instant', messages: cleanMessages };
+      fetchBody = { model: 'llama-3.3-70b-versatile', messages: cleanMessages };
     } 
 
     // 4. DEEPSEEK
@@ -90,13 +90,13 @@ export default async function handler(req) {
       fetchBody = { model: 'mistral-small-latest', messages: cleanMessages };
     } 
 
-    // 6. HUGGINGFACE (Updated Router Endpoint)
+    // 6. HUGGINGFACE (Updated supported model: Qwen/Qwen2.5-72B-Instruct)
     else if (provider === 'huggingface') {
       const key = keys.huggingface;
       if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
       fetchUrl = 'https://router.huggingface.co/hf-inference/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'Qwen/Qwen2.5-Coder-32B-Instruct', messages: cleanMessages };
+      fetchBody = { model: 'Qwen/Qwen2.5-72B-Instruct', messages: cleanMessages };
     } 
 
     // 7. COHERE
