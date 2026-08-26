@@ -96,6 +96,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">AI Model Provider</label>
                     <select id="providerSelect" class="w-full bg-gray-700 text-white text-sm rounded-lg border border-gray-600 p-2.5 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="gemini">Google Gemini 1.5 Flash</option>
                         <option value="openai">OpenAI (ChatGPT)</option>
                         <option value="llama">Meta Llama (Groq)</option>
                         <option value="deepseek">DeepSeek</option>
@@ -436,4 +437,8 @@
         }
 
         function escapeHtml(str) {
-      
+            return str.replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t] || t)); 
+        }
+    </script>
+</body>
+</html>
