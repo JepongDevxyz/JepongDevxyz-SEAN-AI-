@@ -1,0 +1,9 @@
+{
+  "name": "sean-ai-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "cohere-ai": "^7.15.0",
+    "openai": "^4.73.0"
+  }
+}
