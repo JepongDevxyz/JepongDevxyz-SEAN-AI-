@@ -1,147 +1,153 @@
-import OpenAI from 'openai';
-import { CohereClientV2 } from 'cohere-ai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+export const config = {
+  runtime: 'edge', // Mas mabilis at mas maganda sa streaming
+};
 
-export default async function handler(req, res) {
+export default async function handler(req) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
-
-  const { messages, provider } = req.body || {};
-
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'Invalid messages array' });
-  }
-
-  // Streaming headers setup
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-cache, no-transform');
-  res.setHeader('Connection', 'keep-alive');
 
   try {
-    // 1. GEMINI (Google AI)
-    if (provider === 'gemini') {
-      const keys = getApiKeys('GEMINI');
-      if (keys.length === 0) throw new Error('Walang nakaset na GEMINI_API_KEYS');
+    const { messages, provider } = await req.json();
+    const userPrompt = messages[messages.length - 1]?.content || '';
 
-      let lastErr = null;
-      for (const key of keys) {
-        try {
-          const genAI = new GoogleGenerativeAI(key);
-          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-          const prompt = messages[messages.length - 1]?.content || '';
-          const result = await model.generateContentStream(prompt);
+    let apiUrl = '';
+    let headers = { 'Content-Type': 'application/json' };
+    let body = {};
 
-          for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            if (chunkText) res.write(chunkText);
-          }
-          return res.end();
-        } catch (err) {
-          console.warn('[Gemini Error]:', err.message);
-          lastErr = err;
-        }
+    switch (provider) {
+      case 'gemini': {
+        const apiKey = process.env.GEMINI_API_KEYS;
+        if (!apiKey) throw new Error('GEMINI_API_KEY is missing in environment variables.');
+        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+        body = {
+          contents: messages.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+          }))
+        };
+        break;
       }
-      throw lastErr || new Error('All Gemini keys failed.');
+
+      case 'openai': {
+        const apiKey = process.env.OPENAI_API_KEYS;
+        if (!apiKey) throw new Error('OPENAI_API_KEY is missing.');
+        apiUrl = 'https://api.openai.com/v1/chat/completions';
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        body = { model: 'gpt-3.5-turbo', messages, stream: true };
+        break;
+      }
+
+      case 'llama': { // Groq API
+        const apiKey = process.env.GROQ_API_KEYS;
+        if (!apiKey) throw new Error('GROQ_API_KEY is missing.');
+        apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        body = { model: 'llama-3.1-8b-instant', messages, stream: true };
+        break;
+      }
+
+      case 'deepseek': {
+        const apiKey = process.env.DEEPSEEK_API_KEYS;
+        if (!apiKey) throw new Error('DEEPSEEK_API_KEY is missing.');
+        apiUrl = 'https://api.deepseek.com/chat/completions';
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        body = { model: 'deepseek-chat', messages, stream: true };
+        break;
+      }
+
+      case 'mistral': {
+        const apiKey = process.env.MISTRAL_API_KEYS;
+        if (!apiKey) throw new Error('MISTRAL_API_KEY is missing.');
+        apiUrl = 'https://api.mistral.ai/v1/chat/completions';
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        body = { model: 'mistral-tiny', messages, stream: true };
+        break;
+      }
+
+      case 'cohere': {
+        const apiKey = process.env.COHERE_API_KEYS;
+        if (!apiKey) throw new Error('COHERE_API_KEY is missing.');
+        apiUrl = 'https://api.cohere.com/v2/chat';
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        body = {
+          model: 'command-r-plus',
+          messages: messages.map(m => ({ role: m.role, content: m.content })),
+          stream: true
+        };
+        break;
+      }
+
+      default:
+        throw new Error('Unsupported provider selected.');
     }
 
-    // 2. OPENAI
-    if (provider === 'openai') {
-      return await handleOpenAIStyle(res, getApiKeys('OPENAI'), null, 'gpt-4o-mini', messages);
+    const apiResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!apiResponse.ok) {
+      const errText = await apiResponse.text();
+      return new Response(JSON.stringify({ error: `Provider Error: ${errText}` }), {
+        status: apiResponse.status,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    // 3. LLAMA (Groq)
-    if (provider === 'llama') {
-      return await handleOpenAIStyle(res, getApiKeys('GROQ'), 'https://api.groq.com/openai/v1', 'llama-3.3-70b-versatile', messages);
-    }
+    // Transform stream para maging uniform plain text sa frontend
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
 
-    // 4. DEEPSEEK
-    if (provider === 'deepseek') {
-      return await handleOpenAIStyle(res, getApiKeys('DEEPSEEK'), 'https://api.deepseek.com', 'deepseek-chat', messages);
-    }
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        const text = decoder.decode(chunk);
+        const lines = text.split('\n');
 
-    // 5. MISTRAL
-    if (provider === 'mistral') {
-      return await handleOpenAIStyle(res, getApiKeys('MISTRAL'), 'https://api.mistral.ai/v1', 'mistral-small-latest', messages);
-    }
+        for (const line of lines) {
+          if (!line.trim() || line.startsWith(':')) continue;
 
-    // 6. HUGGINGFACE
-    if (provider === 'huggingface') {
-      return await handleOpenAIStyle(res, getApiKeys('HUGGINGFACE'), 'https://api-inference.huggingface.co/v1/', 'Qwen/Qwen2.5-72B-Instruct', messages);
-    }
+          if (line.startsWith('data: ')) {
+            const dataStr = line.replace('data: ', '').trim();
+            if (dataStr === '[DONE]') break;
 
-    // 7. COHERE
-    if (provider === 'cohere') {
-      const keys = getApiKeys('COHERE');
-      if (keys.length === 0) throw new Error('Walang nakaset na COHERE_API_KEYS');
+            try {
+              const json = JSON.parse(dataStr);
+              let content = '';
 
-      let lastErr = null;
-      for (const key of keys) {
-        try {
-          const cohere = new CohereClientV2({ token: key });
-          const stream = await cohere.chatStream({
-            model: 'command-r-plus',
-            messages: messages.map(m => ({ role: m.role, content: m.content })),
-          });
+              if (provider === 'gemini') {
+                content = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              } else if (['openai', 'llama', 'deepseek', 'mistral'].includes(provider)) {
+                content = json.choices?.[0]?.delta?.content || '';
+              } else if (provider === 'cohere') {
+                if (json.type === 'content-delta') {
+                  content = json.delta?.message?.content?.text || '';
+                }
+              }
 
-          for await (const chunk of stream) {
-            if (chunk.type === 'content-delta') {
-              const text = chunk.delta?.message?.content?.text || '';
-              if (text) res.write(text);
+              if (content) {
+                controller.enqueue(encoder.encode(content));
+              }
+            } catch (e) {
+              // Ignore invalid JSON chunks
             }
           }
-          return res.end();
-        } catch (err) {
-          console.warn('[Cohere Error]:', err.message);
-          lastErr = err;
         }
       }
-      throw lastErr || new Error('All Cohere keys failed.');
-    }
+    });
 
-    return res.status(400).write('Invalid provider selection');
-  } catch (error) {
-    console.error('API Handler Error:', error.message);
-    if (!res.headersSent) {
-      return res.status(500).json({ error: error.message });
-    } else {
-      res.write(`\n[Error: ${error.message}]`);
-      return res.end();
-    }
+    return new Response(apiResponse.body.pipeThrough(transformStream), {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      },
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-}
-
-function getApiKeys(prefix) {
-  const rawKeys = process.env[`${prefix}_API_KEYS`] || process.env[`${prefix}_API_KEY`] || '';
-  return rawKeys.split(',').map(k => k.trim()).filter(Boolean);
-}
-
-async function handleOpenAIStyle(res, keys, baseURL, model, messages) {
-  if (keys.length === 0) throw new Error(`Walang API Key na mahanap para sa ${model}`);
-
-  let lastErr = null;
-  for (const apiKey of keys) {
-    try {
-      const client = new OpenAI({
-        apiKey,
-        ...(baseURL ? { baseURL } : {})
-      });
-
-      const stream = await client.chat.completions.create({
-        model,
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        stream: true,
-      });
-
-      for await (const chunk of stream) {
-        const text = chunk.choices[0]?.delta?.content || '';
-        if (text) res.write(text);
-      }
-      return res.end();
-    } catch (err) {
-      console.warn(`[Key Failed for ${model}]:`, err.message);
-      lastErr = err;
-    }
-  }
-  throw lastErr || new Error(`All keys failed for ${model}`);
 }
