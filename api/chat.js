@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { CohereClientV2 } from 'cohere-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const config = {
   runtime: 'edge',
@@ -13,97 +14,112 @@ export default async function handler(req) {
   const { messages, provider } = await req.json();
 
   try {
-    // 1. OPENAI (ChatGPT)
+    // 1. GEMINI (Google AI)
+    if (provider === 'gemini') {
+      const keys = getApiKeys('GEMINI');
+      if (keys.length === 0) throw new Error('Walang nakaset na Gemini API Key.');
+
+      let lastError = null;
+      for (const apiKey of keys) {
+        try {
+          const genAI = new GoogleGenerativeAI(apiKey);
+          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          const prompt = messages[messages.length - 1]?.content || '';
+          const result = await model.generateContent(prompt);
+          const responseText = result.response.text();
+
+          return new Response(responseText, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+        } catch (err) {
+          console.warn(`[Gemini Fallback] Failed key. Trying next...`, err.message);
+          lastError = err;
+        }
+      }
+      throw new Error(`All Gemini keys failed: ${lastError?.message}`);
+    }
+
+    // 2. OPENAI (ChatGPT)
     if (provider === 'openai') {
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      const stream = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        stream: true,
-      });
-      return buildOpenAISucceededStream(stream);
+      return await executeOpenAICompatibleWithRotation(
+        getApiKeys('OPENAI'),
+        null,
+        'gpt-4o-mini',
+        messages
+      );
     }
 
-    // 2. LLAMA (via Groq API)
+    // 3. LLAMA (via Groq API)
     if (provider === 'llama') {
-      const groq = new OpenAI({
-        apiKey: process.env.GROQ_API_KEY,
-        baseURL: 'https://api.groq.com/openai/v1',
-      });
-      const stream = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        stream: true,
-      });
-      return buildOpenAISucceededStream(stream);
+      return await executeOpenAICompatibleWithRotation(
+        getApiKeys('GROQ'),
+        'https://api.groq.com/openai/v1',
+        'llama-3.3-70b-versatile',
+        messages
+      );
     }
 
-    // 3. DEEPSEEK
+    // 4. DEEPSEEK
     if (provider === 'deepseek') {
-      const deepseek = new OpenAI({
-        apiKey: process.env.DEEPSEEK_API_KEY,
-        baseURL: 'https://api.deepseek.com',
-      });
-      const stream = await deepseek.chat.completions.create({
-        model: 'deepseek-chat',
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        stream: true,
-      });
-      return buildOpenAISucceededStream(stream);
+      return await executeOpenAICompatibleWithRotation(
+        getApiKeys('DEEPSEEK'),
+        'https://api.deepseek.com',
+        'deepseek-chat',
+        messages
+      );
     }
 
-    // 4. MISTRAL AI
+    // 5. MISTRAL AI
     if (provider === 'mistral') {
-      const mistral = new OpenAI({
-        apiKey: process.env.MISTRAL_API_KEY,
-        baseURL: 'https://api.mistral.ai/v1',
-      });
-      const stream = await mistral.chat.completions.create({
-        model: 'mistral-small-latest',
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        stream: true,
-      });
-      return buildOpenAISucceededStream(stream);
-    }
-
-    // 5. COHERE
-    if (provider === 'cohere') {
-      const cohere = new CohereClientV2({
-        token: process.env.COHERE_API_KEY,
-      });
-
-      const stream = await cohere.chatStream({
-        model: 'command-r-plus',
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-      });
-
-      const encoder = new TextEncoder();
-      const readableStream = new ReadableStream({
-        async start(controller) {
-          for await (const chunk of stream) {
-            if (chunk.type === 'content-delta') {
-              controller.enqueue(encoder.encode(chunk.delta?.message?.content?.text || ''));
-            }
-          }
-          controller.close();
-        },
-      });
-
-      return new Response(readableStream, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      return await executeOpenAICompatibleWithRotation(
+        getApiKeys('MISTRAL'),
+        'https://api.mistral.ai/v1',
+        'mistral-small-latest',
+        messages
+      );
     }
 
     // 6. HUGGING FACE
     if (provider === 'huggingface') {
-      const hf = new OpenAI({
-        apiKey: process.env.HUGGINGFACE_API_KEY,
-        baseURL: 'https://api-inference.huggingface.co/v1/',
-      });
-      const stream = await hf.chat.completions.create({
-        model: 'Qwen/Qwen2.5-72B-Instruct',
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        stream: true,
-      });
-      return buildOpenAISucceededStream(stream);
+      return await executeOpenAICompatibleWithRotation(
+        getApiKeys('HUGGINGFACE'),
+        'https://api-inference.huggingface.co/v1/',
+        'Qwen/Qwen2.5-72B-Instruct',
+        messages
+      );
+    }
+
+    // 7. COHERE
+    if (provider === 'cohere') {
+      const keys = getApiKeys('COHERE');
+      if (keys.length === 0) throw new Error('Walang nakaset na Cohere API Key.');
+
+      let lastError = null;
+      for (const apiKey of keys) {
+        try {
+          const cohere = new CohereClientV2({ token: apiKey });
+          const stream = await cohere.chatStream({
+            model: 'command-r-plus',
+            messages: messages.map(m => ({ role: m.role, content: m.content })),
+          });
+
+          const encoder = new TextEncoder();
+          const readableStream = new ReadableStream({
+            async start(controller) {
+              for await (const chunk of stream) {
+                if (chunk.type === 'content-delta') {
+                  controller.enqueue(encoder.encode(chunk.delta?.message?.content?.text || ''));
+                }
+              }
+              controller.close();
+            },
+          });
+
+          return new Response(readableStream, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+        } catch (err) {
+          console.warn(`[Cohere Fallback] Failed key. Trying next...`, err.message);
+          lastError = err;
+        }
+      }
+      throw new Error(`All Cohere keys failed: ${lastError?.message}`);
     }
 
     return new Response('Invalid Provider Selected', { status: 400 });
@@ -113,6 +129,41 @@ export default async function handler(req) {
   }
 }
 
+// Helper: Hahatiin ang comma-separated keys (e.g. key1,key2,key3) papuntang Array
+function getApiKeys(prefix) {
+  const rawKeys = process.env[`${prefix}_API_KEYS`] || process.env[`${prefix}_API_KEY`] || '';
+  return rawKeys.split(',').map(k => k.trim()).filter(Boolean);
+}
+
+// Helper: Generic execution function para sa OpenAI-compatible providers
+async function executeOpenAICompatibleWithRotation(keys, baseURL, model, messages) {
+  if (keys.length === 0) throw new Error(`Walang nakaset na API Key para sa model: ${model}`);
+
+  let lastError = null;
+  for (const apiKey of keys) {
+    try {
+      const client = new OpenAI({
+        apiKey: apiKey,
+        ...(baseURL ? { baseURL } : {})
+      });
+
+      const stream = await client.chat.completions.create({
+        model: model,
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+        stream: true,
+      });
+
+      return buildOpenAISucceededStream(stream);
+    } catch (err) {
+      console.warn(`[Rotation] Failed Key for ${model}. Trying next...`, err.message);
+      lastError = err;
+    }
+  }
+
+  throw new Error(`All keys failed for model ${model}: ${lastError?.message}`);
+}
+
+// Helper: Stream formatter
 function buildOpenAISucceededStream(stream) {
   const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
