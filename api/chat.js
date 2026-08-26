@@ -41,7 +41,7 @@ export default async function handler(req) {
     let fetchHeaders = { 'Content-Type': 'application/json' };
     let fetchBody = {};
 
-    // 1. GEMINI (In-update sa hiningi ng API: gemini-3.6-flash)
+    // 1. GEMINI
     if (provider === 'gemini') {
       const key = keys.gemini;
       if (!key) return new Response('[GEMINI ERROR]: Walang GEMINI_API_KEYS.', { status: 200 });
@@ -63,13 +63,13 @@ export default async function handler(req) {
       fetchBody = { model: 'gpt-4o-mini', messages: cleanMessages };
     } 
 
-    // 3. LLAMA / GROQ (In-update sa meta-llama/llama-4-scout-17b)
+    // 3. LLAMA / GROQ (Gamitin ang stable gemma2-9b-it model)
     else if (provider === 'llama') {
       const key = keys.groq;
       if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang GROQ_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.groq.com/openai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'gemma2-9b-it', messages: cleanMessages };
+      fetchBody = { model: 'openai/gpt-oss-20b', messages: cleanMessages };
     } 
 
     // 4. DEEPSEEK
@@ -90,7 +90,7 @@ export default async function handler(req) {
       fetchBody = { model: 'mistral-small-latest', messages: cleanMessages };
     } 
 
-    // 6. HUGGINGFACE (In-update sa standard HF router payload)
+    // 6. HUGGINGFACE (Direct Inference Endpoint)
     else if (provider === 'huggingface') {
       const key = keys.huggingface;
       if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
@@ -141,8 +141,10 @@ export default async function handler(req) {
     let textOutput = '';
     if (provider === 'gemini') {
       textOutput = parsedData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    } else if (['openai', 'llama', 'deepseek', 'mistral', 'huggingface'].includes(provider)) {
+    } else if (['openai', 'llama', 'deepseek', 'mistral'].includes(provider)) {
       textOutput = parsedData.choices?.[0]?.message?.content || '';
+    } else if (provider === 'huggingface') {
+      textOutput = Array.isArray(parsedData) ? parsedData[0]?.generated_text : (parsedData.choices?.[0]?.message?.content || parsedData.generated_text || '');
     } else if (provider === 'cohere') {
       textOutput = parsedData.text || '';
     }
