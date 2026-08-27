@@ -72,17 +72,16 @@ export default async function handler(req) {
 
     // 4. HUGGINGFACE
     else if (provider === 'huggingface') {
-  const key = keys.huggingface;
-  if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
-  fetchUrl = 'https://router.huggingface.co/v1/chat/completions';
-  fetchHeaders['Authorization'] = `Bearer ${key}`;
-  fetchHeaders['Content-Type'] = 'application/json';
-  fetchBody = { 
-    model: 'Qwen/Qwen2.5-7B-Instruct',
-    messages: cleanMessages 
-  };
-} 
-
+      const key = keys.huggingface;
+      if (!key) return new Response('[HUGGINGFACE ERROR]: Walang HUGGINGFACE_API_KEYS.', { status: 200 });
+      fetchUrl = 'https://router.huggingface.co/v1/chat/completions';
+      fetchHeaders['Authorization'] = `Bearer ${key}`;
+      fetchBody = { 
+        model: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-32B', 
+        messages: cleanMessages 
+      };
+    }
+      
     // 5. COHERE
     else if (provider === 'cohere') {
       const key = keys.cohere;
