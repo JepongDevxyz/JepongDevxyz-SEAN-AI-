@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S.E.A.N. - AI Assistant</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Marked.js for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Highlight.js for Code Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
@@ -111,7 +107,6 @@
 </head>
 <body class="flex flex-col h-[100dvh] w-screen overflow-hidden antialiased bg-[#0f172a]">
 
-    <!-- Header -->
     <header class="bg-[#1e293b]/80 backdrop-blur-md px-4 py-3 flex justify-between items-center shrink-0 z-20 border-b border-slate-800/80 w-full">
         <div class="flex items-center space-x-3">
             <div class="bg-indigo-600/20 p-2 rounded-xl border border-indigo-500/30">
@@ -131,7 +126,6 @@
         </div>
     </header>
 
-    <!-- Sidebar Overlay & Menu -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 z-30 hidden backdrop-blur-sm transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-[#0f172a] border-l border-slate-800/60 z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between shadow-2xl">
         <div class="space-y-6">
@@ -194,20 +188,18 @@
         </div>
     </aside>
 
-    <!-- Main Chat Area Wrapper -->
     <main class="flex-1 min-h-0 overflow-y-auto p-4 w-full max-w-4xl mx-auto flex flex-col justify-between" id="chatContainer">
         <div id="welcomeScreen" class="my-auto flex flex-col items-center justify-center text-center px-4 py-4">
             <div class="w-16 h-16 md:w-20 md:h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-4 md:mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
                 <i class="fa-solid fa-brain text-3xl md:text-4xl text-indigo-400"></i>
             </div>
-            <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">Kumusta, Jepong!</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">Kumusta!</h1>
             <p class="text-slate-400 text-xs md:text-sm max-w-md leading-relaxed">
                 Ako si <span class="text-indigo-400 font-semibold">S.E.A.N.</span> — ang iyong AI assistant. Mag-type o mag-attach ng kahit anong file para magsimula.
             </p>
         </div>
     </main>
 
-    <!-- Attachment Preview Area -->
     <div id="attachmentPreview" class="hidden w-full max-w-4xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-2 truncate">
             <i id="attachmentIcon" class="fa-solid fa-file text-indigo-400"></i>
@@ -218,7 +210,6 @@
         </button>
     </div>
 
-    <!-- Input Footer -->
     <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0 w-full border-t border-slate-800/40">
         <div class="max-w-4xl mx-auto space-y-2 w-full">
             <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-2.5 md:py-3 shadow-lg w-full">
@@ -247,7 +238,16 @@
         </div>
     </footer>
 
-    <!-- Fullscreen Live Code Preview Modal -->
+    <div id="mediaModal" class="fixed inset-0 bg-slate-950/90 z-50 hidden flex-col items-center justify-center p-4 backdrop-blur-md" onclick="closeMediaModal()">
+        <button onclick="closeMediaModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full bg-slate-800/80 transition z-50">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <div class="max-w-4xl max-h-[90vh] flex items-center justify-center overflow-hidden" onclick="event.stopPropagation()">
+            <img id="mediaModalImg" class="hidden max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl border border-slate-700">
+            <video id="mediaModalVid" controls class="hidden max-w-full max-h-[85vh] rounded-2xl shadow-2xl border border-slate-700"></video>
+        </div>
+    </div>
+
     <div id="previewModal" class="fixed inset-0 bg-slate-950/90 z-50 hidden flex-col transition-all duration-300 backdrop-blur-md p-2 md:p-6">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl flex flex-col w-full h-full shadow-2xl overflow-hidden">
             <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
@@ -270,7 +270,6 @@
         </div>
     </div>
 
-    <!-- Custom Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4 transition-all duration-200">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-5 transform scale-95 transition-all duration-200" id="confirmBox">
             <div class="flex items-center space-x-3 text-red-400">
@@ -348,6 +347,35 @@
                 }
             });
         });
+
+        function openMediaModal(src, type) {
+            const modal = document.getElementById('mediaModal');
+            const img = document.getElementById('mediaModalImg');
+            const vid = document.getElementById('mediaModalVid');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            if (type === 'image') {
+                img.src = src;
+                img.classList.remove('hidden');
+                vid.classList.add('hidden');
+                vid.pause();
+            } else if (type === 'video') {
+                vid.src = src;
+                vid.classList.remove('hidden');
+                img.classList.add('hidden');
+                vid.play();
+            }
+        }
+
+        function closeMediaModal() {
+            const modal = document.getElementById('mediaModal');
+            const vid = document.getElementById('mediaModalVid');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            vid.pause();
+        }
 
         function setupSmartAutoScroll() {
             const container = document.getElementById('chatContainer');
@@ -466,8 +494,8 @@
             scrollToBottom();
 
             try {
-                const cleanPrompt = encodeURIComponent(promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture/gi, '').trim());
-                const imageUrl = `https://pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+                const cleanPrompt = encodeURIComponent(promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture/gi, '').trim() || "artistic abstraction");
+                const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
 
                 const img = new Image();
                 img.src = imageUrl;
@@ -475,12 +503,12 @@
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
                     img.onerror = reject;
-                    setTimeout(() => reject(new Error('Generation Timeout')), 15000);
+                    setTimeout(() => resolve(), 12000); // graceful timeout fallback
                 });
 
                 const renderHTML = `
                     <div class="space-y-2">
-                        <img src="${imageUrl}" class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover">
+                        <img src="${imageUrl}" onclick="openMediaModal('${imageUrl}', 'image')" class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover cursor-pointer hover:opacity-95 transition">
                         <div class="flex items-center space-x-2 pt-1">
                             <a href="${imageUrl}" target="_blank" download="generated_image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
                                 <i class="fa-solid fa-download"></i>
@@ -497,7 +525,7 @@
                 contentDiv.innerHTML = `
                     <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. (${err.message})</span>
+                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. Paki-subukan muli.</span>
                     </div>
                 `;
             } finally {
@@ -787,96 +815,4 @@
                 });
 
             } catch (err) {
-                contentDiv.innerHTML = `<span class="text-red-400 text-xs">[NETWORK ERROR]: Hindi makakonekta sa server. (${err.message})</span>`;
-            } finally {
-                scrollToBottom();
-            }
-        }
-
-        function appendBubble(role, content, providerBadge = null, file = null) {
-            const container = document.getElementById('chatContainer');
-            const wrapper = document.createElement('div');
-            const isUser = role === 'user';
-            
-            wrapper.className = `flex items-start space-x-2 mb-4 ${isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'}`;
-
-            let badgeHTML = '';
-            if (!isUser && providerBadge) {
-                badgeHTML = `<div class="text-[10px] text-indigo-400/80 font-mono mb-1 flex items-center space-x-1">
-                                <i class="fa-solid fa-bolt text-[8px]"></i>
-                                <span>${providerBadge}</span>
-                             </div>`;
-            }
-
-            let fileHTML = '';
-            if (file) {
-                if (file.type.startsWith('image/')) {
-                    fileHTML = `<img src="${file.data}" class="max-w-xs rounded-xl mb-2 border border-white/10 shadow-md">`;
-                } else if (file.type.startsWith('video/')) {
-                    fileHTML = `<video src="${file.data}" controls class="max-w-xs rounded-xl mb-2 border border-white/10 shadow-md"></video>`;
-                } else {
-                    fileHTML = `<div class="flex items-center space-x-2 mb-2 p-2 bg-black/20 rounded-lg text-xs">
-                                    <i class="fa-solid fa-file-lines text-indigo-400"></i>
-                                    <span class="truncate max-w-[200px]">${file.name}</span>
-                                </div>`;
-                }
-            }
-
-            wrapper.innerHTML = `
-                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUser ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-indigo-400 border border-slate-700'} text-xs shadow-md">
-                    <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i>
-                </div>
-                <div class="max-w-[85%] md:max-w-[80%] p-3.5 text-sm ${isUser ? 'bubble-user' : 'bubble-ai'} shadow-md">
-                    ${badgeHTML}
-                    ${fileHTML}
-                    <div class="content-body prose prose-invert max-w-none text-sm leading-relaxed">
-                        ${content ? marked.parse(content) : ''}
-                    </div>
-                </div>
-            `;
-
-            container.appendChild(wrapper);
-
-            if (content) {
-                const contentDiv = wrapper.querySelector('.content-body');
-                addCodeBlockActions(contentDiv);
-                wrapper.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
-            }
-
-            scrollToBottom();
-            return wrapper;
-        }
-
-        function addCodeBlockActions(element) {
-            element.querySelectorAll('pre').forEach((pre) => {
-                if (pre.querySelector('.code-actions')) return;
-
-                const code = pre.querySelector('code')?.innerText || pre.innerText;
-                const actionsContainer = document.createElement('div');
-                actionsContainer.className = 'code-actions';
-
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'code-btn';
-                copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(code).then(() => {
-                        copyBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Copied!';
-                        setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy', 2000);
-                    });
-                };
-                actionsContainer.appendChild(copyBtn);
-
-                if (code.includes('<html') || code.includes('<div') || code.includes('<button') || code.includes('<style') || code.includes('<script')) {
-                    const runBtn = document.createElement('button');
-                    runBtn.className = 'code-btn run-btn';
-                    runBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run Code';
-                    runBtn.onclick = () => runCodePreview(code);
-                    actionsContainer.appendChild(runBtn);
-                }
-
-                pre.appendChild(actionsContainer);
-            });
-        }
-    </script>
-</body>
-</html>
+                contentDiv.innerHTML = `<span class="text-red-400 text-xs">
