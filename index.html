@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S.E.A.N. - AI Assistant</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Marked.js for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Code Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
@@ -21,26 +25,80 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         
         .bubble-user {
-            background-color: #6366f1;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: #ffffff;
             border-top-left-radius: 1.2rem;
             border-top-right-radius: 0.2rem;
             border-bottom-left-radius: 1.2rem;
             border-bottom-right-radius: 1.2rem;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
         }
+        
         .bubble-ai {
-            background-color: #1e293b;
+            background: #1e293b;
             color: #f1f5f9;
             border-top-left-radius: 0.2rem;
             border-top-right-radius: 1.2rem;
             border-bottom-left-radius: 1.2rem;
             border-bottom-right-radius: 1.2rem;
-            border: 1px solid #334155;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
+
         .recording {
             color: #ef4444 !important;
             animation: pulse 1s infinite;
         }
+
+        pre {
+            position: relative;
+            background-color: #090d16 !important;
+            border-radius: 0.75rem;
+            padding: 2.5rem 1rem 1rem 1rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-x: auto;
+        }
+
+        .code-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .code-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .code-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        .run-btn {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.5);
+            color: #a5b4fc;
+        }
+
+        .run-btn:hover {
+            background: rgba(99, 102, 241, 0.6);
+            color: #ffffff;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
@@ -50,140 +108,221 @@
 <body class="flex flex-col h-screen overflow-hidden antialiased">
 
     <!-- Header -->
-    <header class="bg-[#1e293b]/80 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex justify-between items-center shrink-0 z-20">
+    <header class="bg-[#1e293b]/80 backdrop-blur-md px-4 py-3 flex justify-between items-center shrink-0 z-20 border-b border-slate-800/80">
         <div class="flex items-center space-x-3">
             <div class="bg-indigo-600/20 p-2 rounded-xl border border-indigo-500/30">
                 <i class="fa-solid fa-robot text-indigo-400 text-xl"></i>
             </div>
-            <span class="font-bold text-lg tracking-wider text-white">S.E.A.N.</span>
+            <span class="font-bold text-lg tracking-wider text-white">S.E.A.N. AI</span>
         </div>
 
         <div class="flex items-center space-x-3">
-            <div class="bg-slate-800 px-3 py-1 rounded-full text-xs font-mono text-emerald-400 border border-slate-700 flex items-center space-x-1.5">
+            <div class="bg-slate-900/80 px-3 py-1 rounded-full text-xs font-mono text-emerald-400 border border-slate-700/80 flex items-center space-x-1.5 shadow-inner">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span id="pingDisplay">-- ms</span>
             </div>
-            <button id="menuToggleBtn" class="text-slate-300 hover:text-white p-1 focus:outline-none">
+            <button id="menuToggleBtn" class="text-slate-300 hover:text-white p-2 rounded-lg hover:bg-slate-800/60 transition focus:outline-none">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
         </div>
     </header>
 
-    <!-- Sidebar Overlay & Menu -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-30 hidden backdrop-blur-sm"></div>
-    <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-[#1e293b] border-l border-slate-800 z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-5 flex flex-col justify-between shadow-2xl">
+    <!-- Minimalist Sidebar Overlay & Menu -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 z-30 hidden backdrop-blur-sm transition-opacity"></div>
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-[#0f172a] border-l border-slate-800/60 z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between shadow-2xl">
         <div class="space-y-6">
             <!-- Sidebar Header -->
-            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                <span class="text-xs font-semibold uppercase text-slate-400 tracking-widest">Settings & History</span>
-                <button id="closeSidebarBtn" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="flex justify-between items-center pb-2">
+                <span class="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">Menu</span>
+                <button id="closeSidebarBtn" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
             </div>
 
-            <!-- Custom Modern Dropdown -->
-            <div>
-                <label class="block text-[11px] font-semibold text-slate-400 mb-2 uppercase tracking-wider">Select AI Engine</label>
+            <!-- Custom Dropdown Engine Selector -->
+            <div class="space-y-2">
+                <label class="block text-[11px] font-medium text-slate-400">AI Model</label>
                 <div class="relative">
-                    <button id="dropdownBtn" onclick="toggleDropdown()" class="w-full bg-slate-900/90 text-slate-200 text-sm rounded-xl border border-slate-700/80 px-3.5 py-2.5 flex items-center justify-between hover:border-indigo-500/50 transition">
-                        <span id="selectedProviderText" class="truncate font-medium">Gemini 3.6</span>
-                        <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-2"></i>
+                    <button id="dropdownBtn" onclick="toggleDropdown()" class="w-full bg-slate-900/80 text-slate-200 text-xs rounded-xl border border-slate-800 px-3.5 py-3 flex items-center justify-between hover:border-indigo-500/40 transition">
+                        <span id="selectedProviderText" class="truncate font-medium">Gemini 2.5 Flash</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-2"></i>
                     </button>
 
-                    <!-- Dropdown Options Menu -->
-                    <div id="dropdownMenu" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl z-50 overflow-hidden py-1 max-h-60 overflow-y-auto backdrop-blur-xl">
-                        <div onclick="selectProvider('gemini', 'Gemini 3.6')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-indigo-600/20 hover:text-indigo-300 cursor-pointer flex justify-between items-center transition">
-                            <span>Gemini 3.6</span>
+                    <div id="dropdownMenu" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden py-1 max-h-60 overflow-y-auto">
+                        <div onclick="selectProvider('gemini', 'Gemini')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
+                            <span>Gemini</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
-                        <div onclick="selectProvider('openrouter', 'ChatGPT')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-indigo-600/20 hover:text-indigo-300 cursor-pointer flex justify-between items-center transition">
+                        <div onclick="selectProvider('openrouter', 'ChatGPT')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
                             <span>ChatGPT</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
-                        <div onclick="selectProvider('llama', 'Llama 4')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-indigo-600/20 hover:text-indigo-300 cursor-pointer flex justify-between items-center transition">
+                        <div onclick="selectProvider('llama', 'Llama 4')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
                             <span>Llama 4</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
-                        
-                        <div onclick="selectProvider('mistral', 'Mistral AI')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-indigo-600/20 hover:text-indigo-300 cursor-pointer flex justify-between items-center transition">
+                        <div onclick="selectProvider('mistral', 'Mistral AI')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
                             <span>Mistral AI</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
-                        <div onclick="selectProvider('cohere', 'Cohere AI')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-indigo-600/20 hover:text-indigo-300 cursor-pointer flex justify-between items-center transition">
+                        <div onclick="selectProvider('cohere', 'Cohere AI')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
                             <span>Cohere AI</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
-                        
                     </div>
                 </div>
             </div>
 
             <!-- New Chat Button -->
-            <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg shadow-indigo-600/20">
+            <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/10">
                 <i class="fa-solid fa-plus text-xs"></i>
-                <span class="text-xs">New Conversation</span>
+                <span class="text-xs">New Chat</span>
             </button>
 
-            <!-- History List -->
-            <div>
-                <span class="block text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">Recent</span>
-                <div id="chatHistory" class="space-y-1 overflow-y-auto max-h-[40vh] pr-1"></div>
+            <!-- Recent Chats -->
+            <div class="space-y-2">
+                <span class="block text-[11px] font-medium text-slate-400">Recents</span>
+                <div id="chatHistory" class="space-y-1 overflow-y-auto max-h-[45vh] pr-1"></div>
             </div>
         </div>
 
-        <!-- Minimalist Clear History Link -->
-        <div class="border-t border-slate-800/80 pt-3">
-            <button onclick="clearAllHistory()" class="text-xs text-slate-500 hover:text-red-400 transition flex items-center space-x-1.5 px-1 py-1">
+        <!-- Minimalist Footer -->
+        <div class="pt-4 border-t border-slate-800/40">
+            <button onclick="clearAllHistory()" class="w-full text-xs text-slate-500 hover:text-red-400 transition flex items-center justify-center space-x-2 py-2 rounded-lg hover:bg-red-500/10">
                 <i class="fa-regular fa-trash-can text-xs"></i>
-                <span>Clear history</span>
+                <span>Clear conversations</span>
             </button>
         </div>
     </aside>
 
-    <!-- Main Chat Content Container -->
-    <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-4xl mx-auto w-full" id="chatContainer">
-        <!-- Welcome Screen -->
-        <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto">
-            <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-full flex items-center justify-center mb-6 shadow-inner">
+    <!-- Main Chat Container -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center" id="chatContainer">
+        <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
+            <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
                 <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
             </div>
-            <h1 class="text-2xl font-bold text-white mb-3">Kumusta! Ako si S.E.A.N.</h1>
-            <p class="text-slate-400 text-sm max-w-sm leading-relaxed">
-                Ang iyong AI assistant. Magtanong ng kahit ano, humingi ng tulong sa coding, o lumikha ng mga larawan.
+            <h1 class="text-3xl font-bold text-white mb-2">Kumusta, Jepong!</h1>
+            <p class="text-slate-400 text-sm max-w-md leading-relaxed">
+                Ako si <span class="text-indigo-400 font-semibold">S.E.A.N.</span> — ang iyong AI assistant. Mag-type o mag-attach ng kahit anong file para magsimula.
             </p>
         </div>
     </main>
 
+    <!-- Attachment Preview Area -->
+    <div id="attachmentPreview" class="hidden max-w-2xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2 truncate">
+            <i id="attachmentIcon" class="fa-solid fa-file text-indigo-400"></i>
+            <span id="attachmentName" class="text-xs text-slate-300 truncate">file_name.png</span>
+        </div>
+        <button onclick="removeAttachment()" class="text-slate-500 hover:text-red-400 p-1">
+            <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+    </div>
+
     <!-- Input Footer -->
-    <footer class="p-3 md:p-4 bg-[#1e293b] border-t border-slate-800 shrink-0">
-        <div class="max-w-4xl mx-auto">
-            <div class="bg-slate-900 border border-slate-700/80 rounded-2xl flex items-center px-3 py-2 focus-within:border-indigo-500 transition-all">
-                <button class="text-slate-400 hover:text-slate-200 p-2" title="Attach file">
+    <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0">
+        <div class="max-w-2xl mx-auto space-y-2">
+            <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-3 shadow-lg">
+                <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
+                <button onclick="document.getElementById('fileInput').click()" class="text-slate-400 hover:text-slate-200 pr-3 transition" title="Attach file">
                     <i class="fa-solid fa-paperclip text-lg"></i>
                 </button>
-                <button id="micBtn" onclick="toggleSpeech()" class="text-slate-400 hover:text-slate-200 p-2" title="Voice Input">
+
+                <button id="imageToggleBtn" onclick="toggleImageMode()" class="text-slate-400 hover:text-indigo-400 pr-3 transition" title="Toggle Image Mode">
+                    <i class="fa-solid fa-image text-lg"></i>
+                </button>
+                
+                <button id="micBtn" onclick="toggleSpeech()" class="text-slate-400 hover:text-slate-200 pr-3 transition" title="Voice Input">
                     <i class="fa-solid fa-microphone text-lg"></i>
                 </button>
-                <textarea id="userInput" rows="1" placeholder="Mag-type ng mensahe..." class="w-full bg-transparent text-white px-2 focus:outline-none resize-none max-h-24 text-sm md:text-base" onkeydown="handleKeyDown(event)"></textarea>
-                <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-500 text-white p-2.5 rounded-xl ml-1 transition shadow-md shadow-indigo-600/30">
-                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                
+                <textarea id="userInput" rows="1" placeholder="Mag-type ng mensahe..." class="w-full bg-transparent text-white focus:outline-none resize-none max-h-24 text-sm md:text-base placeholder-slate-400" onkeydown="handleKeyDown(event)"></textarea>
+                
+                <button onclick="sendMessage()" class="text-indigo-400 hover:text-indigo-300 pl-3 transition shrink-0">
+                    <i class="fa-solid fa-paper-plane text-lg"></i>
                 </button>
             </div>
-            <div class="text-center text-[10px] text-slate-500 mt-1.5">
-                S.E.A.N. can make mistakes. Verify important information.
+            <div class="text-center text-xs text-slate-400">
+                S.E.A.N. AI can make mistakes.
             </div>
         </div>
     </footer>
 
+    <!-- Fullscreen Live Code Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-950/90 z-50 hidden flex-col transition-all duration-300 backdrop-blur-md p-2 md:p-6">
+        <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl flex flex-col w-full h-full shadow-2xl overflow-hidden">
+            <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-play text-emerald-400 text-sm"></i>
+                    <span class="text-xs font-semibold text-slate-200 uppercase tracking-wider">Live Code Preview</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="refreshPreview()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition" title="Refresh">
+                        <i class="fa-solid fa-rotate-right text-xs"></i>
+                    </button>
+                    <button onclick="closePreviewModal()" class="text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition" title="Close">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 bg-white relative">
+                <iframe id="previewFrame" class="w-full h-full border-none"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modern Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4 transition-all duration-200">
+        <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-5 transform scale-95 transition-all duration-200" id="confirmBox">
+            <div class="flex items-center space-x-3 text-red-400">
+                <div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-semibold text-white">Clear History</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Are you sure you want to delete all conversations?</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-2">
+                <button onclick="closeConfirmModal(false)" class="px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-xl transition">
+                    Cancel
+                </button>
+                <button onclick="closeConfirmModal(true)" class="px-4 py-2 text-xs font-medium bg-red-600 hover:bg-red-500 text-white rounded-xl transition shadow-lg shadow-red-600/20">
+                    Delete All
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const SYSTEM_PROMPT = "You are S.E.A.N. AI, an intelligent AI assistant created and developed solely by Jay-Ar Lee Espiritu. IMPORTANT INSTRUCTION: You MUST detect the language used by the user in their message (e.g., Tagalog/Filipino, English, Taglish, Bisaya, Spanish, etc.) and ALWAYS respond in the exact same language. If asked who created or developed you in any language, state clearly that you are S.E.A.N. AI created by Jay-Ar Lee Espiritu.";
+
         let chatSessions = JSON.parse(localStorage.getItem('sean_sessions') || '{}');
-        let currentSessionId = null;
-        let selectedProvider = 'gemini';
+        let savedProvider = JSON.parse(localStorage.getItem('sean_selected_provider') || '{"value": "gemini", "label": "Gemini 2.5 Flash"}');
+        
+        let currentSessionId = localStorage.getItem('sean_current_session') || null;
+        let selectedProvider = savedProvider.value;
+        let selectedProviderLabel = savedProvider.label;
+
         let recognition = null;
         let isRecording = false;
+        let attachedFile = null;
+        let currentRunningCode = '';
+        let isImageMode = false;
+        let confirmCallback = null;
+
+        // Swipe Gesture Variables
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const swipeMinDistance = 60; // Pixels distance to trigger swipe
 
         document.addEventListener('DOMContentLoaded', () => {
             setupSidebar();
             setupVoice();
-            
+            setupSwipeGesture();
+            updateProviderUI();
+
             const tx = document.getElementById('userInput');
             tx.addEventListener('input', function() {
                 this.style.height = 'auto';
@@ -191,10 +330,15 @@
             });
 
             const keys = Object.keys(chatSessions);
-            if (keys.length > 0) loadSession(keys[keys.length - 1]);
-            else createNewChat();
+            if (keys.length > 0) {
+                if (!currentSessionId || !chatSessions[currentSessionId]) {
+                    currentSessionId = keys[keys.length - 1];
+                }
+                loadSession(currentSessionId);
+            } else {
+                createNewChat();
+            }
 
-            // Close custom dropdown on outside click
             document.addEventListener('click', (e) => {
                 const btn = document.getElementById('dropdownBtn');
                 const menu = document.getElementById('dropdownMenu');
@@ -204,6 +348,146 @@
             });
         });
 
+        /* --- Mobile Swipe Gesture Handler --- */
+        function setupSwipeGesture() {
+            document.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipeGesture();
+            }, { passive: true });
+        }
+
+        function handleSwipeGesture() {
+            const swipeDistance = touchEndX - touchStartX;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            // Slide Left (Swipe papuntang Kaliwa) -> Bubuksan ang Sidebar Menu
+            if (swipeDistance < -swipeMinDistance) {
+                sidebar.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+            }
+
+            // Slide Right (Swipe papuntang Kanan) -> Isasara ang Sidebar Menu
+            if (swipeDistance > swipeMinDistance) {
+                sidebar.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        /* --- Custom Confirmation Modal --- */
+        function clearAllHistory() {
+            showConfirmModal(() => {
+                chatSessions = {};
+                localStorage.removeItem('sean_current_session');
+                saveSessions();
+                createNewChat();
+            });
+        }
+
+        function showConfirmModal(onConfirm) {
+            confirmCallback = onConfirm;
+            const modal = document.getElementById('confirmModal');
+            const box = document.getElementById('confirmBox');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeConfirmModal(isConfirmed) {
+            const modal = document.getElementById('confirmModal');
+            const box = document.getElementById('confirmBox');
+
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                if (isConfirmed && confirmCallback) {
+                    confirmCallback();
+                }
+                confirmCallback = null;
+            }, 150);
+        }
+
+        /* --- Image Generation Mode Toggle --- */
+        function toggleImageMode() {
+            isImageMode = !isImageMode;
+            const btn = document.getElementById('imageToggleBtn');
+            const input = document.getElementById('userInput');
+
+            if (isImageMode) {
+                btn.classList.add('text-indigo-400', 'scale-110');
+                btn.classList.remove('text-slate-400');
+                input.placeholder = "Describe the image you want to generate...";
+            } else {
+                btn.classList.remove('text-indigo-400', 'scale-110');
+                btn.classList.add('text-slate-400');
+                input.placeholder = "Mag-type ng mensahe...";
+            }
+        }
+
+        /* --- Image Generation & Renderer --- */
+        async function generateImage(promptText) {
+            const session = chatSessions[currentSessionId];
+            const aiBubble = appendBubble('assistant', '', 'Image AI Generator');
+            const contentDiv = aiBubble.querySelector('.content-body');
+
+            contentDiv.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-6 space-y-3 bg-slate-900/60 rounded-xl border border-slate-800 animate-pulse">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-400"></i>
+                    <span class="text-xs text-slate-400 font-mono">Generating image... Please wait.</span>
+                </div>
+            `;
+
+            try {
+                const cleanPrompt = encodeURIComponent(promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture/gi, '').trim());
+                const imageUrl = `https://pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+
+                const img = new Image();
+                img.src = imageUrl;
+
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    setTimeout(() => reject(new Error('Generation Timeout')), 15000);
+                });
+
+                const renderHTML = `
+                    <div class="space-y-2">
+                        <img src="${imageUrl}" class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover">
+                        <div class="flex items-center space-x-2 pt-1">
+                            <a href="${imageUrl}" target="_blank" download="generated_image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Download</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                contentDiv.innerHTML = renderHTML;
+                session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
+
+            } catch (err) {
+                contentDiv.innerHTML = `
+                    <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. Na-cancel ang request. (${err.message})</span>
+                    </div>
+                `;
+            } finally {
+                saveSessions();
+            }
+        }
+
         function toggleDropdown() {
             const menu = document.getElementById('dropdownMenu');
             menu.classList.toggle('hidden');
@@ -211,12 +495,17 @@
 
         function selectProvider(value, label) {
             selectedProvider = value;
-            document.getElementById('selectedProviderText').innerText = label;
+            selectedProviderLabel = label;
+            localStorage.setItem('sean_selected_provider', JSON.stringify({ value, label }));
+            updateProviderUI();
             document.getElementById('dropdownMenu').classList.add('hidden');
-            
+        }
+
+        function updateProviderUI() {
+            document.getElementById('selectedProviderText').innerText = selectedProviderLabel;
             document.querySelectorAll('.provider-option').forEach(el => {
                 const check = el.querySelector('.check-icon');
-                if (el.innerText.includes(label)) {
+                if (el.innerText.includes(selectedProviderLabel)) {
                     check.classList.remove('hidden');
                     el.classList.add('bg-indigo-600/20', 'text-indigo-300');
                 } else {
@@ -244,9 +533,13 @@
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
                 recognition.lang = 'tl-PH';
+                
                 recognition.onresult = (e) => {
-                    document.getElementById('userInput').value += e.results[0][0].transcript;
+                    const transcript = e.results[0][0].transcript;
+                    document.getElementById('userInput').value += transcript;
                     stopSpeech();
                 };
                 recognition.onerror = stopSpeech;
@@ -255,7 +548,7 @@
         }
 
         function toggleSpeech() {
-            if (!recognition) return alert('Voice input not supported in browser');
+            if (!recognition) return alert('Voice input is not supported in this browser.');
             const mic = document.getElementById('micBtn');
             if (!isRecording) {
                 recognition.start();
@@ -272,6 +565,60 @@
             document.getElementById('micBtn').classList.remove('recording');
         }
 
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                attachedFile = {
+                    name: file.name,
+                    type: file.type,
+                    data: e.target.result
+                };
+                
+                document.getElementById('attachmentName').innerText = file.name;
+                document.getElementById('attachmentPreview').classList.remove('hidden');
+                
+                const icon = document.getElementById('attachmentIcon');
+                if (file.type.startsWith('image/')) icon.className = 'fa-solid fa-image text-indigo-400';
+                else if (file.type.startsWith('video/')) icon.className = 'fa-solid fa-video text-indigo-400';
+                else icon.className = 'fa-solid fa-file text-indigo-400';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeAttachment() {
+            attachedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('attachmentPreview').classList.add('hidden');
+        }
+
+        function runCodePreview(code) {
+            currentRunningCode = code;
+            const modal = document.getElementById('previewModal');
+            const iframe = document.getElementById('previewFrame');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(code.includes('<html') ? code : `<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-4 bg-slate-900 text-white">${code}</body></html>`);
+            doc.close();
+        }
+
+        function refreshPreview() {
+            if (currentRunningCode) runCodePreview(currentRunningCode);
+        }
+
+        function closePreviewModal() {
+            const modal = document.getElementById('previewModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('previewFrame').src = 'about:blank';
+        }
+
         function createNewChat() {
             currentSessionId = 's_' + Date.now();
             chatSessions[currentSessionId] = { title: 'New Conversation', messages: [] };
@@ -282,12 +629,16 @@
 
         function loadSession(id) {
             currentSessionId = id;
+            localStorage.setItem('sean_current_session', id);
             renderHistory();
             renderMessages();
         }
 
         function saveSessions() {
             localStorage.setItem('sean_sessions', JSON.stringify(chatSessions));
+            if (currentSessionId) {
+                localStorage.setItem('sean_current_session', currentSessionId);
+            }
         }
 
         function renderHistory() {
@@ -309,20 +660,22 @@
             container.innerHTML = '';
             const session = chatSessions[currentSessionId];
             if (!session || session.messages.length === 0) {
+                container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center";
                 container.innerHTML = `
-                    <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto">
-                        <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                    <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
+                        <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
                             <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
                         </div>
-                        <h1 class="text-2xl font-bold text-white mb-3">Kumusta! Ako si S.E.A.N.</h1>
-                        <p class="text-slate-400 text-sm max-w-sm leading-relaxed">
-                            Ang iyong AI assistant. Magtanong ng kahit ano, humingi ng tulong sa coding, o lumikha ng mga larawan.
+                        <h1 class="text-3xl font-bold text-white mb-2">Kumusta, Jepong!</h1>
+                        <p class="text-slate-400 text-sm max-w-md leading-relaxed">
+                            Ako si <span class="text-indigo-400 font-semibold">S.E.A.N.</span> — ang iyong AI assistant. Mag-type o mag-attach ng kahit anong file para magsimula.
                         </p>
                     </div>`;
                 return;
             }
 
-            session.messages.forEach(m => appendBubble(m.role, m.content));
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
+            session.messages.forEach(m => appendBubble(m.role, m.content, m.providerLabel, m.file));
             container.scrollTop = container.scrollHeight;
         }
 
@@ -336,104 +689,168 @@
         async function sendMessage() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text && !attachedFile) return;
 
             const welcome = document.getElementById('welcomeScreen');
             if (welcome) welcome.remove();
 
+            const container = document.getElementById('chatContainer');
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
+
             const session = chatSessions[currentSessionId];
             if (session.messages.length === 0) {
-                session.title = text.substring(0, 20);
+                session.title = text ? text.substring(0, 22) : (attachedFile ? attachedFile.name : 'New Conversation');
                 renderHistory();
             }
 
-            session.messages.push({ role: 'user', content: text });
-            appendBubble('user', text);
+            const currentFile = attachedFile;
+            removeAttachment();
+
+            session.messages.push({ role: 'user', content: text, file: currentFile });
+            appendBubble('user', text, null, currentFile);
 
             input.value = '';
             input.style.height = 'auto';
 
-            const container = document.getElementById('chatContainer');
             container.scrollTop = container.scrollHeight;
 
-            await fetchAiResponse();
+            const isImageKeyword = /generate image|gawan mo ako ng larawan|draw|picture of/gi.test(text);
+
+            if (isImageMode || isImageKeyword) {
+                if (isImageMode) toggleImageMode();
+                await generateImage(text);
+            } else {
+                await fetchAiResponse();
+            }
+
             saveSessions();
         }
 
         async function fetchAiResponse() {
             const session = chatSessions[currentSessionId];
-            const aiBubble = appendBubble('assistant', '');
+            const aiBubble = appendBubble('assistant', '', selectedProviderLabel);
             const contentDiv = aiBubble.querySelector('.content-body');
 
             const startTime = performance.now();
-            let accumulatedText = '';
 
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: session.messages, provider: selectedProvider })
+                    body: JSON.stringify({ 
+                        system_prompt: SYSTEM_PROMPT,
+                        messages: session.messages, 
+                        provider: selectedProvider 
+                    })
                 });
 
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error || 'Server responded with an error');
+                const resultText = await response.text();
+                document.getElementById('pingDisplay').innerText = Math.round(performance.now() - startTime) + ' ms';
+
+                if (!response.ok || resultText.startsWith('[')) {
+                    contentDiv.innerHTML = `<span class="text-red-400 font-mono text-xs">${resultText}</span>`;
+                    return;
                 }
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let firstChunk = false;
+                contentDiv.innerHTML = marked.parse(resultText);
+                addCodeBlockActions(contentDiv);
+                document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    if (!firstChunk) {
-                        document.getElementById('pingDisplay').innerText = Math.round(performance.now() - startTime) + ' ms';
-                        firstChunk = true;
-                    }
-
-                    accumulatedText += decoder.decode(value, { stream: true });
-                    contentDiv.innerHTML = marked.parse(accumulatedText);
-                    document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
-                    document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
-                }
-
-                session.messages.push({ role: 'assistant', content: accumulatedText });
+                session.messages.push({ 
+                    role: 'assistant', 
+                    content: resultText,
+                    providerLabel: selectedProviderLabel 
+                });
 
             } catch (err) {
-                contentDiv.innerHTML = `<span class="text-red-400">Error: Nagkaroon ng problema sa pagproseso ng iyong request. (${err.message})</span>`;
+                contentDiv.innerHTML = `<span class="text-red-400 text-xs">[NETWORK ERROR]: Hindi makakonekta sa server. (${err.message})</span>`;
+            } finally {
+                document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
             }
         }
 
-        function appendBubble(role, content) {
+        function appendBubble(role, content, providerBadge = null, file = null) {
             const container = document.getElementById('chatContainer');
             const wrapper = document.createElement('div');
             const isUser = role === 'user';
             
             wrapper.className = `flex items-start space-x-2 mb-4 ${isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'}`;
 
+            let badgeHTML = '';
+            if (!isUser && providerBadge) {
+                badgeHTML = `<div class="text-[10px] text-indigo-400/80 font-mono mb-1 flex items-center space-x-1">
+                                <i class="fa-solid fa-bolt text-[8px]"></i>
+                                <span>${providerBadge}</span>
+                             </div>`;
+            }
+
+            let fileHTML = '';
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    fileHTML = `<img src="${file.data}" class="max-w-xs rounded-xl mb-2 border border-white/10 shadow-md">`;
+                } else if (file.type.startsWith('video/')) {
+                    fileHTML = `<video src="${file.data}" controls class="max-w-xs rounded-xl mb-2 border border-white/10 shadow-md"></video>`;
+                } else {
+                    fileHTML = `<div class="flex items-center space-x-2 mb-2 p-2 bg-black/20 rounded-lg text-xs">
+                                    <i class="fa-solid fa-file-lines text-indigo-400"></i>
+                                    <span class="truncate max-w-[200px]">${file.name}</span>
+                                </div>`;
+                }
+            }
+
             wrapper.innerHTML = `
-                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUser ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-indigo-400 border border-slate-700'} text-xs shadow-md">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUser ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-indigo-400 border border-slate-700'} text-xs shadow-md">
                     <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i>
                 </div>
-                <div class="max-w-[80%] p-3.5 text-sm ${isUser ? 'bubble-user' : 'bubble-ai'} shadow-md">
-                    <div class="content-body prose prose-invert max-w-none">
+                <div class="max-w-[85%] md:max-w-[80%] p-3.5 text-sm ${isUser ? 'bubble-user' : 'bubble-ai'} shadow-md">
+                    ${badgeHTML}
+                    ${fileHTML}
+                    <div class="content-body prose prose-invert max-w-none text-sm leading-relaxed">
                         ${content ? marked.parse(content) : ''}
                     </div>
                 </div>
             `;
 
             container.appendChild(wrapper);
+
+            if (content) {
+                const contentDiv = wrapper.querySelector('.content-body');
+                addCodeBlockActions(contentDiv);
+                wrapper.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+            }
+
             return wrapper;
         }
 
-        function clearAllHistory() {
-            if (confirm('Clear all conversation history?')) {
-                chatSessions = {};
-                saveSessions();
-                createNewChat();
-            }
+        function addCodeBlockActions(element) {
+            element.querySelectorAll('pre').forEach((pre) => {
+                if (pre.querySelector('.code-actions')) return;
+
+                const code = pre.querySelector('code')?.innerText || pre.innerText;
+                const actionsContainer = document.createElement('div');
+                actionsContainer.className = 'code-actions';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'code-btn';
+                copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(code).then(() => {
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Copied!';
+                        setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy', 2000);
+                    });
+                };
+                actionsContainer.appendChild(copyBtn);
+
+                if (code.includes('<html') || code.includes('<div') || code.includes('<button') || code.includes('<style') || code.includes('<script')) {
+                    const runBtn = document.createElement('button');
+                    runBtn.className = 'code-btn run-btn';
+                    runBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run Code';
+                    runBtn.onclick = () => runCodePreview(code);
+                    actionsContainer.appendChild(runBtn);
+                }
+
+                pre.appendChild(actionsContainer);
+            });
         }
     </script>
 </body>
