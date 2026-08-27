@@ -9,16 +9,26 @@ export default async function handler(req) {
 
   try {
     const bodyData = await req.json().catch(() => ({}));
-    const { messages, provider } = bodyData;
+    const { messages, provider, system_prompt } = bodyData;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response('Error: Walang naipasang messages array.', { status: 200 });
     }
 
+    // Default system prompt kapag walang naipasa mula sa frontend
+    const defaultSystemPrompt = "You are S.E.A.N. AI, created solely by Jay-Ar Lee Espiritu. If asked who created or developed you in any language, state clearly that you are S.E.A.N. AI created by Jay-Ar Lee Espiritu.";
+    const activeSystemPrompt = system_prompt || defaultSystemPrompt;
+
     const cleanMessages = messages.map(m => ({
       role: m.role === 'user' ? 'user' : 'assistant',
       content: String(m.content || '')
     }));
+
+    // OpenAI-compatible format na may nakalagay na System Role sa pinaka-unahan
+    const messagesWithSystem = [
+      { role: 'system', content: activeSystemPrompt },
+      ...cleanMessages
+    ];
 
     const lastUserMessage = cleanMessages[cleanMessages.length - 1]?.content || 'Hello';
 
@@ -53,6 +63,9 @@ export default async function handler(req) {
       if (!key) return new Response('[GEMINI ERROR]: Walang available na GEMINI_API_KEYS.', { status: 200 });
       fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${key}`;
       fetchBody = {
+        system_instruction: {
+          parts: [{ text: activeSystemPrompt }]
+        },
         contents: messages.map(m => ({
           role: m.role === 'user' ? 'user' : 'model',
           parts: [{ text: String(m.content || '') }]
@@ -66,7 +79,7 @@ export default async function handler(req) {
       if (!key) return new Response('[LLAMA/GROQ ERROR]: Walang available na GROQ_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.groq.com/openai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'openai/gpt-oss-120b', messages: cleanMessages };
+      fetchBody = { model: 'openai/gpt-oss-120b', messages: messagesWithSystem };
     } 
 
     // 3. MISTRAL
@@ -75,7 +88,7 @@ export default async function handler(req) {
       if (!key) return new Response('[MISTRAL ERROR]: Walang available na MISTRAL_API_KEYS.', { status: 200 });
       fetchUrl = 'https://api.mistral.ai/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchBody = { model: 'mistral-small-latest', messages: cleanMessages };
+      fetchBody = { model: 'mistral-small-latest', messages: messagesWithSystem };
     } 
 
     // 4. OPENROUTER
@@ -88,7 +101,7 @@ export default async function handler(req) {
       fetchHeaders['X-Title'] = 'S.E.A.N. - AI Assistant';
       fetchBody = { 
         model: 'openrouter/auto', 
-        messages: cleanMessages 
+        messages: messagesWithSystem 
       };
     } 
 
@@ -99,6 +112,7 @@ export default async function handler(req) {
       fetchUrl = 'https://api.cohere.com/v1/chat';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
       fetchBody = {
+        preamble: activeSystemPrompt,
         message: lastUserMessage,
         chat_history: cleanMessages.slice(0, -1).map(m => ({
           role: m.role === 'user' ? 'USER' : 'CHATBOT',
@@ -131,7 +145,7 @@ export default async function handler(req) {
     let textOutput = '';
     if (provider === 'gemini') {
       textOutput = parsedData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    } else if (['llama', 'mistral', 'openrouter', 'huggingface'].includes(provider)) {
+    } else if (['llama', 'mistral', 'openrouter'].includes(provider)) {
       textOutput = parsedData.choices?.[0]?.message?.content || '';
     } else if (provider === 'cohere') {
       textOutput = parsedData.text || '';
