@@ -271,8 +271,8 @@
             <!-- Auto-Shuffle Toggle Block -->
             <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between">
                 <div>
-                    <span class="block text-xs font-medium text-slate-200">Shuffle Mode</span>
-                    <p class="text-[10px] text-slate-500 max-w-[170px] leading-tight mt-0.5">Auto-fallback to working models if current model fails</p>
+                    <span class="block text-xs font-medium text-slate-200">S.E.A.N. Mode</span>
+                    <p class="text-[10px] text-slate-500 max-w-[170px] leading-tight mt-0.5">Automatically use 5 AI in 1 chat. </p>
                 </div>
                 
                 <label class="switch">
@@ -486,7 +486,7 @@
             if (isChecked) {
                 dropdownBtn.classList.add('btn-disabled');
                 dropdownMenu.classList.add('hidden');
-                statusBadge.innerText = 'Auto-Shuffle';
+                statusBadge.innerText = 'S.E.A.N. - Mode';
                 statusBadge.className = 'text-[10px] px-2 py-0.5 rounded bg-indigo-600/30 text-indigo-300 font-mono border border-indigo-500/40';
             } else {
                 dropdownBtn.classList.remove('btn-disabled');
@@ -924,7 +924,7 @@
 
         async function fetchAiResponse() {
             const session = chatSessions[currentSessionId];
-            const currentBadgeLabel = isShuffleActive ? 'Auto-Shuffle Mode' : selectedProviderLabel;
+            const currentBadgeLabel = isShuffleActive ? 'S.E.A.N. AI' : selectedProviderLabel;
             const aiBubble = appendBubble('assistant', '', currentBadgeLabel);
             const contentDiv = aiBubble.querySelector('.content-body');
 
