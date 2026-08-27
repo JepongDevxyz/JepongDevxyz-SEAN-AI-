@@ -102,6 +102,21 @@
             color: #ffffff;
         }
 
+        /* --- Thinking Orb Custom Animation --- */
+        .orb-spinner {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 20%, #818cf8 100%);
+            mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
+            animation: orbRotate 1.2s linear infinite;
+        }
+
+        @keyframes orbRotate {
+            to { transform: rotate(360deg); }
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
@@ -145,7 +160,7 @@
                 <label class="block text-[11px] font-medium text-slate-400">AI Model</label>
                 <div class="relative">
                     <button id="dropdownBtn" onclick="toggleDropdown()" class="w-full bg-slate-900/80 text-slate-200 text-xs rounded-xl border border-slate-800 px-3.5 py-3 flex items-center justify-between hover:border-indigo-500/40 transition">
-                        <span id="selectedProviderText" class="truncate font-medium">Gemini 2.5 Flash</span>
+                        <span id="selectedProviderText" class="truncate font-medium">Gemini</span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-2"></i>
                     </button>
 
@@ -158,8 +173,8 @@
                             <span>ChatGPT</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
-                        <div onclick="selectProvider('llama', 'Llama 4')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
-                            <span>Llama 4</span>
+                        <div onclick="selectProvider('llama', 'Llama 3')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
+                            <span>Llama 3</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
                         <div onclick="selectProvider('mistral', 'Mistral AI')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
@@ -193,7 +208,7 @@
         </div>
     </aside>
 
-    <!-- Main Chat Container (Responsive Fit-To-Screen) -->
+    <!-- Main Chat Container -->
     <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full flex flex-col justify-start" id="chatContainer">
         <div id="welcomeScreen" class="my-auto flex flex-col items-center justify-center text-center px-4 py-8">
             <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
@@ -269,7 +284,7 @@
         </div>
     </div>
 
-    <!-- Custom Modern Confirmation Modal -->
+    <!-- Custom Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4 transition-all duration-200">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-5 transform scale-95 transition-all duration-200" id="confirmBox">
             <div class="flex items-center space-x-3 text-red-400">
@@ -294,10 +309,11 @@
     </div>
 
     <script>
+        // System Prompt na nagpapanatili ng kakilanlan bilang S.E.A.N. AI na gawa ni Jay-Ar Lee Espiritu
         const SYSTEM_PROMPT = "You are S.E.A.N. AI, an intelligent AI assistant created and developed solely by Jay-Ar Lee Espiritu. IMPORTANT INSTRUCTION: You MUST detect the language used by the user in their message (e.g., Tagalog/Filipino, English, Taglish, Bisaya, Spanish, etc.) and ALWAYS respond in the exact same language. If asked who created or developed you in any language, state clearly that you are S.E.A.N. AI created by Jay-Ar Lee Espiritu.";
 
         let chatSessions = JSON.parse(localStorage.getItem('sean_sessions') || '{}');
-        let savedProvider = JSON.parse(localStorage.getItem('sean_selected_provider') || '{"value": "gemini", "label": "Gemini 2.5 Flash"}');
+        let savedProvider = JSON.parse(localStorage.getItem('sean_selected_provider') || '{"value": "gemini", "label": "Gemini"}');
         
         let currentSessionId = localStorage.getItem('sean_current_session') || null;
         let selectedProvider = savedProvider.value;
@@ -419,7 +435,7 @@
             if (isImageMode) {
                 btn.classList.add('text-indigo-400', 'scale-110');
                 btn.classList.remove('text-slate-400');
-                input.placeholder = "Describe the image you want to generate...";
+                input.placeholder = "Ilarawan ang larawan na gusto mong i-generate...";
             } else {
                 btn.classList.remove('text-indigo-400', 'scale-110');
                 btn.classList.add('text-slate-400');
@@ -427,61 +443,41 @@
             }
         }
 
-        /* --- Fixed Image Generator Function --- */
-        async function generateImage(promptText) {
+        function generateImage(promptText) {
             const session = chatSessions[currentSessionId];
             const aiBubble = appendBubble('assistant', '', 'Image AI Generator');
             const contentDiv = aiBubble.querySelector('.content-body');
 
-            contentDiv.innerHTML = `
-                <div class="flex flex-col items-center justify-center p-6 space-y-3 bg-slate-900/60 rounded-xl border border-slate-800 animate-pulse">
-                    <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-400"></i>
-                    <span class="text-xs text-slate-400 font-mono">Generating image... Please wait.</span>
+            let cleanPrompt = promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture of|create/gi, '').trim();
+            if (!cleanPrompt) cleanPrompt = "a beautiful landscape";
+
+            const seed = Math.floor(Math.random() * 1000000);
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+
+            const imgContainerId = 'img_' + Date.now();
+
+            const renderHTML = `
+                <div class="space-y-3" id="${imgContainerId}_wrapper">
+                    <div id="${imgContainerId}_loader" class="flex flex-col items-center justify-center p-6 space-y-2 bg-slate-900/60 rounded-xl border border-slate-800 animate-pulse">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-400"></i>
+                        <span class="text-xs text-slate-400 font-mono">Gumagawa ng larawan... Pakihintay.</span>
+                    </div>
+                    <img id="${imgContainerId}" src="${imageUrl}" 
+                         class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover hidden"
+                         onload="document.getElementById('${imgContainerId}_loader').remove(); this.classList.remove('hidden');"
+                         onerror="document.getElementById('${imgContainerId}_wrapper').innerHTML='<span class=\'text-red-400 text-xs\'>[ERROR]: Hindi ma-load ang larawan. Subukan ulit.</span>'">
+                    <div class="flex items-center space-x-2 pt-1">
+                        <a href="${imageUrl}" target="_blank" download="generated_image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Download</span>
+                        </a>
+                    </div>
                 </div>
             `;
 
-            try {
-                let cleanPrompt = promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture of|create/gi, '').trim();
-                if (!cleanPrompt) cleanPrompt = "cool scenic view";
-
-                const seed = Math.floor(Math.random() * 1000000);
-                const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
-
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.src = imageUrl;
-
-                await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = () => reject(new Error('Failed to load image from server'));
-                    setTimeout(() => reject(new Error('Generation Timeout')), 20000);
-                });
-
-                const renderHTML = `
-                    <div class="space-y-2">
-                        <img src="${imageUrl}" class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover">
-                        <div class="flex items-center space-x-2 pt-1">
-                            <a href="${imageUrl}" target="_blank" download="generated_image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
-                                <i class="fa-solid fa-download"></i>
-                                <span>Download</span>
-                            </a>
-                        </div>
-                    </div>
-                `;
-
-                contentDiv.innerHTML = renderHTML;
-                session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
-
-            } catch (err) {
-                contentDiv.innerHTML = `
-                    <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. (${err.message || 'Error occurred'})</span>
-                    </div>
-                `;
-            } finally {
-                saveSessions();
-            }
+            contentDiv.innerHTML = renderHTML;
+            session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
+            saveSessions();
         }
 
         function toggleDropdown() {
@@ -714,17 +710,21 @@
 
             if (isImageMode || isImageKeyword) {
                 if (isImageMode) toggleImageMode();
-                await generateImage(text);
+                generateImage(text);
             } else {
-                await fetchAiResponse();
+                await fetchAiResponse(text);
             }
 
             saveSessions();
         }
 
-        async function fetchAiResponse() {
+        async function fetchAiResponse(userMessageText = '') {
             const session = chatSessions[currentSessionId];
-            const aiBubble = appendBubble('assistant', '', selectedProviderLabel);
+            const isMathMath = /solve|math|equation|calculate|compute|pinag-isipan/gi.test(userMessageText);
+            const statusText = isMathMath ? "Solving..." : "Thinking...";
+
+            // Animated Thinking / Solving Loading State
+            const aiBubble = appendBubble('assistant', '', selectedProviderLabel, null, statusText);
             const contentDiv = aiBubble.querySelector('.content-body');
 
             const startTime = performance.now();
@@ -765,7 +765,7 @@
             }
         }
 
-        function appendBubble(role, content, providerBadge = null, file = null) {
+        function appendBubble(role, content, providerBadge = null, file = null, loadingStatusText = null) {
             const container = document.getElementById('chatContainer');
             const wrapper = document.createElement('div');
             const isUser = role === 'user';
@@ -794,6 +794,18 @@
                 }
             }
 
+            let bodyContentHTML = content ? marked.parse(content) : '';
+
+            // Thinking / Solving Orb Component Display
+            if (loadingStatusText) {
+                bodyContentHTML = `
+                    <div class="flex items-center space-x-3 py-1 px-2 bg-slate-900/60 rounded-xl border border-indigo-500/20 w-fit">
+                        <div class="orb-spinner shrink-0"></div>
+                        <span class="text-xs text-indigo-300 font-medium tracking-wide animate-pulse">${loadingStatusText}</span>
+                    </div>
+                `;
+            }
+
             wrapper.innerHTML = `
                 <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUser ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-indigo-400 border border-slate-700'} text-xs shadow-md">
                     <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i>
@@ -802,7 +814,7 @@
                     ${badgeHTML}
                     ${fileHTML}
                     <div class="content-body prose prose-invert max-w-none text-sm leading-relaxed">
-                        ${content ? marked.parse(content) : ''}
+                        ${bodyContentHTML}
                     </div>
                 </div>
             `;
