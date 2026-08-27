@@ -15,14 +15,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
     <style>
-        html, body {
-            height: 100%;
-            height: 100dvh;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
+        body {
             background-color: #0f172a;
             color: #f8fafc;
+            height: 100vh;
+            height: 100dvh;
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -102,28 +99,13 @@
             color: #ffffff;
         }
 
-        /* --- Thinking Orb Custom Animation --- */
-        .orb-spinner {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, transparent 20%, #818cf8 100%);
-            mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
-            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
-            animation: orbRotate 1.2s linear infinite;
-        }
-
-        @keyframes orbRotate {
-            to { transform: rotate(360deg); }
-        }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
     </style>
 </head>
-<body class="flex flex-col h-full w-full antialiased overflow-hidden">
+<body class="flex flex-col h-screen overflow-hidden antialiased">
 
     <!-- Header -->
     <header class="bg-[#1e293b]/80 backdrop-blur-md px-4 py-3 flex justify-between items-center shrink-0 z-20 border-b border-slate-800/80">
@@ -145,10 +127,11 @@
         </div>
     </header>
 
-    <!-- Sidebar Overlay & Menu -->
+    <!-- Minimalist Sidebar Overlay & Menu -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 z-30 hidden backdrop-blur-sm transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-[#0f172a] border-l border-slate-800/60 z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between shadow-2xl">
         <div class="space-y-6">
+            <!-- Sidebar Header -->
             <div class="flex justify-between items-center pb-2">
                 <span class="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">Menu</span>
                 <button id="closeSidebarBtn" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
@@ -156,11 +139,12 @@
                 </button>
             </div>
 
+            <!-- Custom Dropdown Engine Selector -->
             <div class="space-y-2">
                 <label class="block text-[11px] font-medium text-slate-400">AI Model</label>
                 <div class="relative">
                     <button id="dropdownBtn" onclick="toggleDropdown()" class="w-full bg-slate-900/80 text-slate-200 text-xs rounded-xl border border-slate-800 px-3.5 py-3 flex items-center justify-between hover:border-indigo-500/40 transition">
-                        <span id="selectedProviderText" class="truncate font-medium">Gemini</span>
+                        <span id="selectedProviderText" class="truncate font-medium">Gemini 2.5 Flash</span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-2"></i>
                     </button>
 
@@ -173,8 +157,8 @@
                             <span>ChatGPT</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
-                        <div onclick="selectProvider('llama', 'Llama 3')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
-                            <span>Llama 3</span>
+                        <div onclick="selectProvider('llama', 'Llama 4')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
+                            <span>Llama 4</span>
                             <i class="fa-solid fa-check text-indigo-400 hidden check-icon"></i>
                         </div>
                         <div onclick="selectProvider('mistral', 'Mistral AI')" class="provider-option px-3.5 py-2.5 text-xs text-slate-300 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition">
@@ -189,17 +173,20 @@
                 </div>
             </div>
 
+            <!-- New Chat Button -->
             <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/10">
                 <i class="fa-solid fa-plus text-xs"></i>
                 <span class="text-xs">New Chat</span>
             </button>
 
+            <!-- Recent Chats -->
             <div class="space-y-2">
                 <span class="block text-[11px] font-medium text-slate-400">Recents</span>
                 <div id="chatHistory" class="space-y-1 overflow-y-auto max-h-[45vh] pr-1"></div>
             </div>
         </div>
 
+        <!-- Minimalist Footer -->
         <div class="pt-4 border-t border-slate-800/40">
             <button onclick="clearAllHistory()" class="w-full text-xs text-slate-500 hover:text-red-400 transition flex items-center justify-center space-x-2 py-2 rounded-lg hover:bg-red-500/10">
                 <i class="fa-regular fa-trash-can text-xs"></i>
@@ -209,8 +196,8 @@
     </aside>
 
     <!-- Main Chat Container -->
-    <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full flex flex-col justify-start" id="chatContainer">
-        <div id="welcomeScreen" class="my-auto flex flex-col items-center justify-center text-center px-4 py-8">
+    <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center" id="chatContainer">
+        <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
             <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
                 <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
             </div>
@@ -222,7 +209,7 @@
     </main>
 
     <!-- Attachment Preview Area -->
-    <div id="attachmentPreview" class="hidden max-w-3xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between w-full">
+    <div id="attachmentPreview" class="hidden max-w-2xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between">
         <div class="flex items-center space-x-2 truncate">
             <i id="attachmentIcon" class="fa-solid fa-file text-indigo-400"></i>
             <span id="attachmentName" class="text-xs text-slate-300 truncate">file_name.png</span>
@@ -233,9 +220,9 @@
     </div>
 
     <!-- Input Footer -->
-    <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0 border-t border-slate-800/50">
-        <div class="max-w-3xl mx-auto space-y-2">
-            <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-2.5 shadow-lg">
+    <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0">
+        <div class="max-w-2xl mx-auto space-y-2">
+            <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-3 shadow-lg">
                 <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
                 <button onclick="document.getElementById('fileInput').click()" class="text-slate-400 hover:text-slate-200 pr-3 transition" title="Attach file">
                     <i class="fa-solid fa-paperclip text-lg"></i>
@@ -255,7 +242,7 @@
                     <i class="fa-solid fa-paper-plane text-lg"></i>
                 </button>
             </div>
-            <div class="text-center text-[11px] text-slate-500">
+            <div class="text-center text-xs text-slate-400">
                 S.E.A.N. AI can make mistakes.
             </div>
         </div>
@@ -284,7 +271,7 @@
         </div>
     </div>
 
-    <!-- Custom Confirmation Modal -->
+    <!-- Custom Modern Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4 transition-all duration-200">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-5 transform scale-95 transition-all duration-200" id="confirmBox">
             <div class="flex items-center space-x-3 text-red-400">
@@ -309,11 +296,10 @@
     </div>
 
     <script>
-        // System Prompt na nagpapanatili ng kakilanlan bilang S.E.A.N. AI na gawa ni Jay-Ar Lee Espiritu
         const SYSTEM_PROMPT = "You are S.E.A.N. AI, an intelligent AI assistant created and developed solely by Jay-Ar Lee Espiritu. IMPORTANT INSTRUCTION: You MUST detect the language used by the user in their message (e.g., Tagalog/Filipino, English, Taglish, Bisaya, Spanish, etc.) and ALWAYS respond in the exact same language. If asked who created or developed you in any language, state clearly that you are S.E.A.N. AI created by Jay-Ar Lee Espiritu.";
 
         let chatSessions = JSON.parse(localStorage.getItem('sean_sessions') || '{}');
-        let savedProvider = JSON.parse(localStorage.getItem('sean_selected_provider') || '{"value": "gemini", "label": "Gemini"}');
+        let savedProvider = JSON.parse(localStorage.getItem('sean_selected_provider') || '{"value": "gemini", "label": "Gemini 2.5 Flash"}');
         
         let currentSessionId = localStorage.getItem('sean_current_session') || null;
         let selectedProvider = savedProvider.value;
@@ -326,14 +312,19 @@
         let isImageMode = false;
         let confirmCallback = null;
 
+        // Swipe Gesture Variables
         let touchStartX = 0;
         let touchEndX = 0;
         const swipeMinDistance = 60;
+
+        // Smart Auto-Scroll Control State
+        let shouldAutoScroll = true;
 
         document.addEventListener('DOMContentLoaded', () => {
             setupSidebar();
             setupVoice();
             setupSwipeGesture();
+            setupSmartAutoScroll();
             updateProviderUI();
 
             const tx = document.getElementById('userInput');
@@ -361,6 +352,31 @@
             });
         });
 
+        /* --- Smart Auto-Scroll Handler --- */
+        function setupSmartAutoScroll() {
+            const container = document.getElementById('chatContainer');
+            container.addEventListener('scroll', () => {
+                // Kapag malapit sa ibaba (within 60px), i-enable ang auto scroll.
+                // Kapag nag-scroll pataas ang user para magbasa, i-disable ito.
+                const isAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop <= 60;
+                shouldAutoScroll = isAtBottom;
+            });
+        }
+
+        function scrollToBottom(force = false) {
+            const container = document.getElementById('chatContainer');
+            if (force) {
+                shouldAutoScroll = true; // Piliting i-scroll (tulad ng kapag nag-send ng chat)
+            }
+            if (shouldAutoScroll) {
+                container.scrollTo({
+                    top: container.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        /* --- Mobile Swipe Gesture Handler --- */
         function setupSwipeGesture() {
             document.addEventListener('touchstart', (e) => {
                 touchStartX = e.changedTouches[0].screenX;
@@ -388,6 +404,7 @@
             }
         }
 
+        /* --- Custom Confirmation Modal --- */
         function clearAllHistory() {
             showConfirmModal(() => {
                 chatSessions = {};
@@ -427,6 +444,7 @@
             }, 150);
         }
 
+        /* --- Image Generation Mode Toggle --- */
         function toggleImageMode() {
             isImageMode = !isImageMode;
             const btn = document.getElementById('imageToggleBtn');
@@ -435,7 +453,7 @@
             if (isImageMode) {
                 btn.classList.add('text-indigo-400', 'scale-110');
                 btn.classList.remove('text-slate-400');
-                input.placeholder = "Ilarawan ang larawan na gusto mong i-generate...";
+                input.placeholder = "Describe the image you want to generate...";
             } else {
                 btn.classList.remove('text-indigo-400', 'scale-110');
                 btn.classList.add('text-slate-400');
@@ -443,41 +461,59 @@
             }
         }
 
-        function generateImage(promptText) {
+        /* --- Image Generation & Renderer --- */
+        async function generateImage(promptText) {
             const session = chatSessions[currentSessionId];
             const aiBubble = appendBubble('assistant', '', 'Image AI Generator');
             const contentDiv = aiBubble.querySelector('.content-body');
 
-            let cleanPrompt = promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture of|create/gi, '').trim();
-            if (!cleanPrompt) cleanPrompt = "a beautiful landscape";
-
-            const seed = Math.floor(Math.random() * 1000000);
-            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
-
-            const imgContainerId = 'img_' + Date.now();
-
-            const renderHTML = `
-                <div class="space-y-3" id="${imgContainerId}_wrapper">
-                    <div id="${imgContainerId}_loader" class="flex flex-col items-center justify-center p-6 space-y-2 bg-slate-900/60 rounded-xl border border-slate-800 animate-pulse">
-                        <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-400"></i>
-                        <span class="text-xs text-slate-400 font-mono">Gumagawa ng larawan... Pakihintay.</span>
-                    </div>
-                    <img id="${imgContainerId}" src="${imageUrl}" 
-                         class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover hidden"
-                         onload="document.getElementById('${imgContainerId}_loader').remove(); this.classList.remove('hidden');"
-                         onerror="document.getElementById('${imgContainerId}_wrapper').innerHTML='<span class=\'text-red-400 text-xs\'>[ERROR]: Hindi ma-load ang larawan. Subukan ulit.</span>'">
-                    <div class="flex items-center space-x-2 pt-1">
-                        <a href="${imageUrl}" target="_blank" download="generated_image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
-                            <i class="fa-solid fa-download"></i>
-                            <span>Download</span>
-                        </a>
-                    </div>
+            contentDiv.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-6 space-y-3 bg-slate-900/60 rounded-xl border border-slate-800 animate-pulse">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-400"></i>
+                    <span class="text-xs text-slate-400 font-mono">Generating image... Please wait.</span>
                 </div>
             `;
+            scrollToBottom();
 
-            contentDiv.innerHTML = renderHTML;
-            session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
-            saveSessions();
+            try {
+                const cleanPrompt = encodeURIComponent(promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture/gi, '').trim());
+                const imageUrl = `https://pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+
+                const img = new Image();
+                img.src = imageUrl;
+
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    setTimeout(() => reject(new Error('Generation Timeout')), 15000);
+                });
+
+                const renderHTML = `
+                    <div class="space-y-2">
+                        <img src="${imageUrl}" class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover">
+                        <div class="flex items-center space-x-2 pt-1">
+                            <a href="${imageUrl}" target="_blank" download="generated_image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Download</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                contentDiv.innerHTML = renderHTML;
+                session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
+
+            } catch (err) {
+                contentDiv.innerHTML = `
+                    <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. Na-cancel ang request. (${err.message})</span>
+                    </div>
+                `;
+            } finally {
+                scrollToBottom();
+                saveSessions();
+            }
         }
 
         function toggleDropdown() {
@@ -586,6 +622,7 @@
             document.getElementById('attachmentPreview').classList.add('hidden');
         }
 
+        /* --- Live Code Preview Functions --- */
         function runCodePreview(code) {
             currentRunningCode = code;
             const modal = document.getElementById('previewModal');
@@ -594,21 +631,26 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex');
 
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write(code.includes('<html') ? code : `<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-4 bg-slate-900 text-white">${code}</body></html>`);
-            doc.close();
+            const fullHtml = code.includes('<html') ? code : `<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-4 bg-slate-900 text-white">${code}</body></html>`;
+            iframe.srcdoc = fullHtml;
         }
 
         function refreshPreview() {
-            if (currentRunningCode) runCodePreview(currentRunningCode);
+            if (!currentRunningCode) return;
+            const iframe = document.getElementById('previewFrame');
+            iframe.removeAttribute('srcdoc');
+            setTimeout(() => {
+                const fullHtml = currentRunningCode.includes('<html') ? currentRunningCode : `<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-4 bg-slate-900 text-white">${currentRunningCode}</body></html>`;
+                iframe.srcdoc = fullHtml;
+            }, 50);
         }
 
         function closePreviewModal() {
             const modal = document.getElementById('previewModal');
+            const iframe = document.getElementById('previewFrame');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            document.getElementById('previewFrame').src = 'about:blank';
+            iframe.removeAttribute('srcdoc');
         }
 
         function createNewChat() {
@@ -652,9 +694,9 @@
             container.innerHTML = '';
             const session = chatSessions[currentSessionId];
             if (!session || session.messages.length === 0) {
-                container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full flex flex-col justify-start";
+                container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center";
                 container.innerHTML = `
-                    <div id="welcomeScreen" class="my-auto flex flex-col items-center justify-center text-center px-4 py-8">
+                    <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
                         <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
                             <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
                         </div>
@@ -666,9 +708,9 @@
                 return;
             }
 
-            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full";
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
             session.messages.forEach(m => appendBubble(m.role, m.content, m.providerLabel, m.file));
-            container.scrollTop = container.scrollHeight;
+            scrollToBottom(true);
         }
 
         function handleKeyDown(e) {
@@ -687,7 +729,7 @@
             if (welcome) welcome.remove();
 
             const container = document.getElementById('chatContainer');
-            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full";
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
 
             const session = chatSessions[currentSessionId];
             if (session.messages.length === 0) {
@@ -704,30 +746,27 @@
             input.value = '';
             input.style.height = 'auto';
 
-            container.scrollTop = container.scrollHeight;
+            scrollToBottom(true);
 
-            const isImageKeyword = /generate image|gawan mo ako ng larawan|draw|picture|create image/gi.test(text);
+            const isImageKeyword = /generate image|gawan mo ako ng larawan|draw|picture of/gi.test(text);
 
             if (isImageMode || isImageKeyword) {
                 if (isImageMode) toggleImageMode();
-                generateImage(text);
+                await generateImage(text);
             } else {
-                await fetchAiResponse(text);
+                await fetchAiResponse();
             }
 
             saveSessions();
         }
 
-        async function fetchAiResponse(userMessageText = '') {
+        async function fetchAiResponse() {
             const session = chatSessions[currentSessionId];
-            const isMathMath = /solve|math|equation|calculate|compute|pinag-isipan/gi.test(userMessageText);
-            const statusText = isMathMath ? "Solving..." : "Thinking...";
-
-            // Animated Thinking / Solving Loading State
-            const aiBubble = appendBubble('assistant', '', selectedProviderLabel, null, statusText);
+            const aiBubble = appendBubble('assistant', '', selectedProviderLabel);
             const contentDiv = aiBubble.querySelector('.content-body');
 
             const startTime = performance.now();
+            scrollToBottom();
 
             try {
                 const response = await fetch('/api/chat', {
@@ -761,11 +800,11 @@
             } catch (err) {
                 contentDiv.innerHTML = `<span class="text-red-400 text-xs">[NETWORK ERROR]: Hindi makakonekta sa server. (${err.message})</span>`;
             } finally {
-                document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
+                scrollToBottom();
             }
         }
 
-        function appendBubble(role, content, providerBadge = null, file = null, loadingStatusText = null) {
+        function appendBubble(role, content, providerBadge = null, file = null) {
             const container = document.getElementById('chatContainer');
             const wrapper = document.createElement('div');
             const isUser = role === 'user';
@@ -794,18 +833,6 @@
                 }
             }
 
-            let bodyContentHTML = content ? marked.parse(content) : '';
-
-            // Thinking / Solving Orb Component Display
-            if (loadingStatusText) {
-                bodyContentHTML = `
-                    <div class="flex items-center space-x-3 py-1 px-2 bg-slate-900/60 rounded-xl border border-indigo-500/20 w-fit">
-                        <div class="orb-spinner shrink-0"></div>
-                        <span class="text-xs text-indigo-300 font-medium tracking-wide animate-pulse">${loadingStatusText}</span>
-                    </div>
-                `;
-            }
-
             wrapper.innerHTML = `
                 <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUser ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-indigo-400 border border-slate-700'} text-xs shadow-md">
                     <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i>
@@ -814,7 +841,7 @@
                     ${badgeHTML}
                     ${fileHTML}
                     <div class="content-body prose prose-invert max-w-none text-sm leading-relaxed">
-                        ${bodyContentHTML}
+                        ${content ? marked.parse(content) : ''}
                     </div>
                 </div>
             `;
@@ -827,6 +854,7 @@
                 wrapper.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
             }
 
+            scrollToBottom();
             return wrapper;
         }
 
