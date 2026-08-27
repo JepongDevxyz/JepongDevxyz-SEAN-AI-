@@ -77,7 +77,7 @@ export default async function handler(req) {
       fetchUrl = 'https://router.huggingface.co/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
       fetchBody = { 
-        model: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-32B', 
+        model: 'Qwen/Qwen2.5-7B-Instruct:hf-inference', 
         messages: cleanMessages 
       };
     }
