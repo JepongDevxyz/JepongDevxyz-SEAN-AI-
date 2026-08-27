@@ -4,23 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S.E.A.N. - AI Assistant</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Marked.js for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Highlight.js for Code Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
     <style>
-        body {
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
             background-color: #0f172a;
             color: #f8fafc;
-            height: 100vh;
-            height: 100dvh;
         }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         
@@ -105,10 +105,9 @@
         }
     </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden antialiased">
+<body class="flex flex-col h-screen w-screen overflow-hidden antialiased">
 
-    <!-- Header -->
-    <header class="bg-[#1e293b]/80 backdrop-blur-md px-4 py-3 flex justify-between items-center shrink-0 z-20 border-b border-slate-800/80">
+    <header class="bg-[#1e293b]/80 backdrop-blur-md px-4 py-3 flex justify-between items-center shrink-0 z-20 border-b border-slate-800/80 w-full">
         <div class="flex items-center space-x-3">
             <div class="bg-indigo-600/20 p-2 rounded-xl border border-indigo-500/30">
                 <i class="fa-solid fa-robot text-indigo-400 text-xl"></i>
@@ -127,11 +126,9 @@
         </div>
     </header>
 
-    <!-- Minimalist Sidebar Overlay & Menu -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 z-30 hidden backdrop-blur-sm transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-[#0f172a] border-l border-slate-800/60 z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between shadow-2xl">
         <div class="space-y-6">
-            <!-- Sidebar Header -->
             <div class="flex justify-between items-center pb-2">
                 <span class="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">Menu</span>
                 <button id="closeSidebarBtn" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
@@ -139,7 +136,6 @@
                 </button>
             </div>
 
-            <!-- Custom Dropdown Engine Selector -->
             <div class="space-y-2">
                 <label class="block text-[11px] font-medium text-slate-400">AI Model</label>
                 <div class="relative">
@@ -173,20 +169,17 @@
                 </div>
             </div>
 
-            <!-- New Chat Button -->
             <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/10">
                 <i class="fa-solid fa-plus text-xs"></i>
                 <span class="text-xs">New Chat</span>
             </button>
 
-            <!-- Recent Chats -->
             <div class="space-y-2">
                 <span class="block text-[11px] font-medium text-slate-400">Recents</span>
                 <div id="chatHistory" class="space-y-1 overflow-y-auto max-h-[45vh] pr-1"></div>
             </div>
         </div>
 
-        <!-- Minimalist Footer -->
         <div class="pt-4 border-t border-slate-800/40">
             <button onclick="clearAllHistory()" class="w-full text-xs text-slate-500 hover:text-red-400 transition flex items-center justify-center space-x-2 py-2 rounded-lg hover:bg-red-500/10">
                 <i class="fa-regular fa-trash-can text-xs"></i>
@@ -195,21 +188,21 @@
         </div>
     </aside>
 
-    <!-- Main Chat Container -->
-    <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center" id="chatContainer">
-        <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
-            <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
-                <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
+    <div class="flex-1 overflow-hidden relative w-full flex flex-col">
+        <main class="flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-4xl mx-auto flex flex-col justify-center" id="chatContainer">
+            <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
+                <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
+                    <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Kumusta, Jepong!</h1>
+                <p class="text-slate-400 text-sm max-w-md leading-relaxed">
+                    Ako si <span class="text-indigo-400 font-semibold">S.E.A.N.</span> — ang iyong AI assistant. Mag-type o mag-attach ng kahit anong file para magsimula.
+                </p>
             </div>
-            <h1 class="text-3xl font-bold text-white mb-2">Kumusta, Jepong!</h1>
-            <p class="text-slate-400 text-sm max-w-md leading-relaxed">
-                Ako si <span class="text-indigo-400 font-semibold">S.E.A.N.</span> — ang iyong AI assistant. Mag-type o mag-attach ng kahit anong file para magsimula.
-            </p>
-        </div>
-    </main>
+        </main>
+    </div>
 
-    <!-- Attachment Preview Area -->
-    <div id="attachmentPreview" class="hidden max-w-2xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between">
+    <div id="attachmentPreview" class="hidden w-full max-w-4xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-2 truncate">
             <i id="attachmentIcon" class="fa-solid fa-file text-indigo-400"></i>
             <span id="attachmentName" class="text-xs text-slate-300 truncate">file_name.png</span>
@@ -219,10 +212,9 @@
         </button>
     </div>
 
-    <!-- Input Footer -->
-    <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0">
-        <div class="max-w-2xl mx-auto space-y-2">
-            <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-3 shadow-lg">
+    <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0 w-full border-t border-slate-800/40">
+        <div class="max-w-4xl mx-auto space-y-2 w-full">
+            <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-3 shadow-lg w-full">
                 <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
                 <button onclick="document.getElementById('fileInput').click()" class="text-slate-400 hover:text-slate-200 pr-3 transition" title="Attach file">
                     <i class="fa-solid fa-paperclip text-lg"></i>
@@ -248,7 +240,6 @@
         </div>
     </footer>
 
-    <!-- Fullscreen Live Code Preview Modal -->
     <div id="previewModal" class="fixed inset-0 bg-slate-950/90 z-50 hidden flex-col transition-all duration-300 backdrop-blur-md p-2 md:p-6">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl flex flex-col w-full h-full shadow-2xl overflow-hidden">
             <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
@@ -265,13 +256,12 @@
                     </button>
                 </div>
             </div>
-            <div class="flex-1 bg-white relative">
+            <div class="flex-1 bg-white relative w-full h-full">
                 <iframe id="previewFrame" class="w-full h-full border-none"></iframe>
             </div>
         </div>
     </div>
 
-    <!-- Custom Modern Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4 transition-all duration-200">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-5 transform scale-95 transition-all duration-200" id="confirmBox">
             <div class="flex items-center space-x-3 text-red-400">
@@ -356,8 +346,6 @@
         function setupSmartAutoScroll() {
             const container = document.getElementById('chatContainer');
             container.addEventListener('scroll', () => {
-                // Kapag malapit sa ibaba (within 60px), i-enable ang auto scroll.
-                // Kapag nag-scroll pataas ang user para magbasa, i-disable ito.
                 const isAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop <= 60;
                 shouldAutoScroll = isAtBottom;
             });
@@ -366,7 +354,7 @@
         function scrollToBottom(force = false) {
             const container = document.getElementById('chatContainer');
             if (force) {
-                shouldAutoScroll = true; // Piliting i-scroll (tulad ng kapag nag-send ng chat)
+                shouldAutoScroll = true;
             }
             if (shouldAutoScroll) {
                 container.scrollTo({
@@ -694,7 +682,7 @@
             container.innerHTML = '';
             const session = chatSessions[currentSessionId];
             if (!session || session.messages.length === 0) {
-                container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center";
+                container.className = "flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-4xl mx-auto flex flex-col justify-center";
                 container.innerHTML = `
                     <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
                         <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
@@ -708,7 +696,7 @@
                 return;
             }
 
-            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-4xl mx-auto flex flex-col justify-start";
             session.messages.forEach(m => appendBubble(m.role, m.content, m.providerLabel, m.file));
             scrollToBottom(true);
         }
@@ -729,7 +717,7 @@
             if (welcome) welcome.remove();
 
             const container = document.getElementById('chatContainer');
-            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-4xl mx-auto flex flex-col justify-start";
 
             const session = chatSessions[currentSessionId];
             if (session.messages.length === 0) {
