@@ -51,7 +51,7 @@ export default async function handler(req) {
     if (provider === 'gemini') {
       const key = keys.gemini;
       if (!key) return new Response('[GEMINI ERROR]: Walang available na GEMINI_API_KEYS.', { status: 200 });
-      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+      fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${key}`;
       fetchBody = {
         contents: messages.map(m => ({
           role: m.role === 'user' ? 'user' : 'model',
