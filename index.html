@@ -103,7 +103,6 @@
             color: #ffffff;
         }
 
-        /* Animated Thinking Orb Styling */
         .thinking-orb-container {
             display: flex;
             align-items: center;
@@ -363,7 +362,7 @@
 
         let touchStartX = 0;
         let touchEndX = 0;
-        const swipeMinDistance = 60;
+        const swipeMinDistance = 70;
 
         let shouldAutoScroll = true;
 
@@ -428,7 +427,7 @@
                 vid.src = src;
                 vid.classList.remove('hidden');
                 img.classList.add('hidden');
-                vid.play();
+                vid.pause();
             }
         }
 
@@ -476,13 +475,16 @@
             const swipeDistance = touchEndX - touchStartX;
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
+            const screenWidth = window.innerWidth;
 
-            if (swipeDistance < -swipeMinDistance) {
+            const isRightEdgeTouch = touchStartX > (screenWidth - 35);
+
+            if (swipeDistance < -swipeMinDistance && isRightEdgeTouch) {
                 sidebar.classList.remove('translate-x-full');
                 overlay.classList.remove('hidden');
             }
 
-            if (swipeDistance > swipeMinDistance) {
+            if (swipeDistance > swipeMinDistance && !sidebar.classList.contains('translate-x-full')) {
                 sidebar.classList.add('translate-x-full');
                 overlay.classList.add('hidden');
             }
@@ -551,7 +553,7 @@
             contentDiv.innerHTML = getThinkingOrbHTML("Generating image...");
             scrollToBottom();
 
-            const cleanPrompt = encodeURIComponent(promptText.replace(/create|generate|image|picture|larawan|gawan mo ako ng|draw/gi, '').trim() || "modern high quality digital art");
+            const cleanPrompt = encodeURIComponent(promptText.trim() || "modern high quality digital art");
             const seed = Math.floor(Math.random() * 9999999);
             const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
 
@@ -811,10 +813,9 @@
 
             scrollToBottom(true);
 
-            const isImageKeyword = /create|generate|draw|picture of|gawan mo ako ng larawan/gi.test(text);
-
-            if (isImageMode || isImageKeyword) {
-                if (isImageMode) toggleImageMode();
+            // GAGANA LAMANG ANG IMAGE GENERATION KAPAG NAKA-SELECT/ENABLE ANG IMAGE MODE BUTTON
+            if (isImageMode) {
+                toggleImageMode(); // Ise-reset pabalik sa normal pagkatapos mag-generate
                 await generateImage(text);
             } else {
                 await fetchAiResponse();
