@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S.E.A.N. - AI Assistant</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Marked.js for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Code Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
@@ -99,6 +103,45 @@
             color: #ffffff;
         }
 
+        /* Animated Thinking Orb Styling */
+        .thinking-orb-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.25rem;
+        }
+        .thinking-orb {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .orb-core {
+            width: 10px;
+            height: 10px;
+            background-color: #818cf8;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #6366f1;
+            animation: orbPulse 1.5s infinite ease-in-out;
+        }
+        .orb-ring {
+            position: absolute;
+            inset: 0;
+            border: 2px dashed rgba(129, 140, 248, 0.6);
+            border-radius: 50%;
+            animation: orbSpin 3s linear infinite;
+        }
+        @keyframes orbPulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+        @keyframes orbSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
@@ -107,6 +150,7 @@
 </head>
 <body class="flex flex-col h-[100dvh] w-screen overflow-hidden antialiased bg-[#0f172a]">
 
+    <!-- Header -->
     <header class="bg-[#1e293b]/80 backdrop-blur-md px-4 py-3 flex justify-between items-center shrink-0 z-20 border-b border-slate-800/80 w-full">
         <div class="flex items-center space-x-3">
             <div class="bg-indigo-600/20 p-2 rounded-xl border border-indigo-500/30">
@@ -126,6 +170,7 @@
         </div>
     </header>
 
+    <!-- Sidebar Overlay & Menu -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 z-30 hidden backdrop-blur-sm transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-[#0f172a] border-l border-slate-800/60 z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between shadow-2xl">
         <div class="space-y-6">
@@ -188,6 +233,7 @@
         </div>
     </aside>
 
+    <!-- Main Chat Area Wrapper -->
     <main class="flex-1 min-h-0 overflow-y-auto p-4 w-full max-w-4xl mx-auto flex flex-col justify-between" id="chatContainer">
         <div id="welcomeScreen" class="my-auto flex flex-col items-center justify-center text-center px-4 py-4">
             <div class="w-16 h-16 md:w-20 md:h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-4 md:mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
@@ -200,6 +246,7 @@
         </div>
     </main>
 
+    <!-- Attachment Preview Area -->
     <div id="attachmentPreview" class="hidden w-full max-w-4xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-2 truncate">
             <i id="attachmentIcon" class="fa-solid fa-file text-indigo-400"></i>
@@ -210,6 +257,7 @@
         </button>
     </div>
 
+    <!-- Input Footer -->
     <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0 w-full border-t border-slate-800/40">
         <div class="max-w-4xl mx-auto space-y-2 w-full">
             <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-2.5 md:py-3 shadow-lg w-full">
@@ -238,6 +286,7 @@
         </div>
     </footer>
 
+    <!-- Fullscreen Media Lightbox Viewer Modal -->
     <div id="mediaModal" class="fixed inset-0 bg-slate-950/90 z-50 hidden flex-col items-center justify-center p-4 backdrop-blur-md" onclick="closeMediaModal()">
         <button onclick="closeMediaModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full bg-slate-800/80 transition z-50">
             <i class="fa-solid fa-xmark text-xl"></i>
@@ -248,6 +297,7 @@
         </div>
     </div>
 
+    <!-- Fullscreen Live Code Preview Modal -->
     <div id="previewModal" class="fixed inset-0 bg-slate-950/90 z-50 hidden flex-col transition-all duration-300 backdrop-blur-md p-2 md:p-6">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl flex flex-col w-full h-full shadow-2xl overflow-hidden">
             <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
@@ -270,6 +320,7 @@
         </div>
     </div>
 
+    <!-- Custom Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4 transition-all duration-200">
         <div class="bg-[#1e293b] border border-slate-700/80 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-5 transform scale-95 transition-all duration-200" id="confirmBox">
             <div class="flex items-center space-x-3 text-red-400">
@@ -347,6 +398,18 @@
                 }
             });
         });
+
+        function getThinkingOrbHTML(label = "Thinking...") {
+            return `
+                <div class="thinking-orb-container">
+                    <div class="thinking-orb">
+                        <div class="orb-ring"></div>
+                        <div class="orb-core"></div>
+                    </div>
+                    <span class="text-xs text-indigo-300/90 font-mono tracking-wide animate-pulse">${label}</span>
+                </div>
+            `;
+        }
 
         function openMediaModal(src, type) {
             const modal = document.getElementById('mediaModal');
@@ -485,53 +548,36 @@
             const aiBubble = appendBubble('assistant', '', 'Image AI Generator');
             const contentDiv = aiBubble.querySelector('.content-body');
 
-            contentDiv.innerHTML = `
-                <div class="flex flex-col items-center justify-center p-6 space-y-3 bg-slate-900/60 rounded-xl border border-slate-800 animate-pulse">
-                    <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-400"></i>
-                    <span class="text-xs text-slate-400 font-mono">Generating image... Please wait.</span>
-                </div>
-            `;
+            contentDiv.innerHTML = getThinkingOrbHTML("Generating image...");
             scrollToBottom();
 
-            try {
-                const cleanPrompt = encodeURIComponent(promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture/gi, '').trim() || "artistic abstraction");
-                const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+            const cleanPrompt = encodeURIComponent(promptText.replace(/create|generate|image|picture|larawan|gawan mo ako ng|draw/gi, '').trim() || "modern high quality digital art");
+            const seed = Math.floor(Math.random() * 9999999);
+            const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
 
-                const img = new Image();
-                img.src = imageUrl;
-
-                await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = reject;
-                    setTimeout(() => resolve(), 12000); // graceful timeout fallback
-                });
-
-                const renderHTML = `
-                    <div class="space-y-2">
-                        <img src="${imageUrl}" onclick="openMediaModal('${imageUrl}', 'image')" class="w-full max-w-md rounded-xl border border-white/10 shadow-lg object-cover cursor-pointer hover:opacity-95 transition">
-                        <div class="flex items-center space-x-2 pt-1">
-                            <a href="${imageUrl}" target="_blank" download="generated_image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
-                                <i class="fa-solid fa-download"></i>
-                                <span>Download</span>
-                            </a>
-                        </div>
+            const renderHTML = `
+                <div class="space-y-2.5">
+                    <div class="relative group rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl">
+                        <img src="${imageUrl}" 
+                             alt="Generated AI Art"
+                             loading="eager"
+                             onclick="openMediaModal(this.src, 'image')" 
+                             onerror="this.onerror=null; this.src='https://source.unsplash.com/featured/1024x1024/?${cleanPrompt}';"
+                             class="w-full max-w-md rounded-xl object-cover cursor-pointer hover:scale-[1.01] transition-transform duration-300">
                     </div>
-                `;
-
-                contentDiv.innerHTML = renderHTML;
-                session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
-
-            } catch (err) {
-                contentDiv.innerHTML = `
-                    <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. Paki-subukan muli.</span>
+                    <div class="flex items-center space-x-2 pt-1">
+                        <a href="${imageUrl}" target="_blank" download="SEAN_Generated_Image.jpg" class="text-xs bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-600/50 transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-download text-xs"></i>
+                            <span>Download Image</span>
+                        </a>
                     </div>
-                `;
-            } finally {
-                scrollToBottom();
-                saveSessions();
-            }
+                </div>
+            `;
+
+            contentDiv.innerHTML = renderHTML;
+            session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
+            saveSessions();
+            scrollToBottom();
         }
 
         function toggleDropdown() {
@@ -765,7 +811,7 @@
 
             scrollToBottom(true);
 
-            const isImageKeyword = /generate image|gawan mo ako ng larawan|draw|picture of/gi.test(text);
+            const isImageKeyword = /create|generate|draw|picture of|gawan mo ako ng larawan/gi.test(text);
 
             if (isImageMode || isImageKeyword) {
                 if (isImageMode) toggleImageMode();
@@ -781,6 +827,8 @@
             const session = chatSessions[currentSessionId];
             const aiBubble = appendBubble('assistant', '', selectedProviderLabel);
             const contentDiv = aiBubble.querySelector('.content-body');
+
+            contentDiv.innerHTML = getThinkingOrbHTML("Thinking...");
 
             const startTime = performance.now();
             scrollToBottom();
@@ -850,7 +898,7 @@
                 }
             }
 
-            const hasContentText = content && content.trim().length > 0;
+            const hasContentText = (content && content.trim().length > 0) || !isUser;
 
             wrapper.innerHTML = `
                 <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUser ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-indigo-400 border border-slate-700'} text-xs shadow-md">
@@ -858,7 +906,7 @@
                 </div>
                 <div class="max-w-[85%] md:max-w-[80%] flex flex-col ${isUser ? 'items-end' : 'items-start'}">
                     ${fileHTML}
-                    ${hasContentText || !isUser ? `
+                    ${hasContentText ? `
                     <div class="p-3.5 text-sm ${isUser ? 'bubble-user' : 'bubble-ai'} shadow-md w-full">
                         ${badgeHTML}
                         <div class="content-body prose prose-invert max-w-none text-sm leading-relaxed">
