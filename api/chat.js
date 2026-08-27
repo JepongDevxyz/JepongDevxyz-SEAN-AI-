@@ -87,7 +87,7 @@ export default async function handler(req) {
       fetchHeaders['HTTP-Referer'] = 'https://jepong-devxyz-sean-ai.vercel.app/';
       fetchHeaders['X-Title'] = 'S.E.A.N. - AI Assistant';
       fetchBody = { 
-        model: 'google/gemini-2.0-flash-lite-001:free', 
+        model: 'openrouter/auto', 
         messages: cleanMessages 
       };
     } 
