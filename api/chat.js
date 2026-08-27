@@ -84,10 +84,10 @@ export default async function handler(req) {
       if (!key) return new Response('[OPENROUTER ERROR]: Walang available na OPENROUTER_API_KEYS.', { status: 200 });
       fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
       fetchHeaders['Authorization'] = `Bearer ${key}`;
-      fetchHeaders['HTTP-Referer'] = 'https://sean-ai.vercel.app';
-      fetchHeaders['X-Title'] = 'S.E.A.N. AI';
+      fetchHeaders['HTTP-Referer'] = 'https://jepong-devxyz-sean-ai.vercel.app/';
+      fetchHeaders['X-Title'] = 'S.E.A.N. - AI Assistant';
       fetchBody = { 
-        model: 'meta-llama/llama-3.3-70b-instruct:free', 
+        model: 'deepseek/deepseek-r1-distill-qwen-32b:free', 
         messages: cleanMessages 
       };
     } 
