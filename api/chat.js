@@ -79,7 +79,7 @@ export default async function handler(req) {
     } 
 
     // 4. OPENROUTER
-    else if (provider === 'openrouter' || provider === 'huggingface') {
+    else if (provider === 'openrouter') {
       const key = keys.openrouter;
       if (!key) return new Response('[OPENROUTER ERROR]: Walang available na OPENROUTER_API_KEYS.', { status: 200 });
       fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
@@ -87,7 +87,7 @@ export default async function handler(req) {
       fetchHeaders['HTTP-Referer'] = 'https://jepong-devxyz-sean-ai.vercel.app/';
       fetchHeaders['X-Title'] = 'S.E.A.N. - AI Assistant';
       fetchBody = { 
-        model: 'deepseek/deepseek-r1-distill-qwen-32b:free', 
+        model: 'google/gemini-2.0-flash-lite-001:free', 
         messages: cleanMessages 
       };
     } 
