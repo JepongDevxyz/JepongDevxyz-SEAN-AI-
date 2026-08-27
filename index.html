@@ -15,11 +15,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
     <style>
-        body {
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
             background-color: #0f172a;
             color: #f8fafc;
-            height: 100vh;
-            height: 100dvh;
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -105,7 +108,7 @@
         }
     </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden antialiased">
+<body class="flex flex-col h-full w-full antialiased overflow-hidden">
 
     <!-- Header -->
     <header class="bg-[#1e293b]/80 backdrop-blur-md px-4 py-3 flex justify-between items-center shrink-0 z-20 border-b border-slate-800/80">
@@ -127,11 +130,10 @@
         </div>
     </header>
 
-    <!-- Minimalist Sidebar Overlay & Menu -->
+    <!-- Sidebar Overlay & Menu -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 z-30 hidden backdrop-blur-sm transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-[#0f172a] border-l border-slate-800/60 z-40 transform translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between shadow-2xl">
         <div class="space-y-6">
-            <!-- Sidebar Header -->
             <div class="flex justify-between items-center pb-2">
                 <span class="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">Menu</span>
                 <button id="closeSidebarBtn" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
@@ -139,7 +141,6 @@
                 </button>
             </div>
 
-            <!-- Custom Dropdown Engine Selector -->
             <div class="space-y-2">
                 <label class="block text-[11px] font-medium text-slate-400">AI Model</label>
                 <div class="relative">
@@ -173,20 +174,17 @@
                 </div>
             </div>
 
-            <!-- New Chat Button -->
             <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/10">
                 <i class="fa-solid fa-plus text-xs"></i>
                 <span class="text-xs">New Chat</span>
             </button>
 
-            <!-- Recent Chats -->
             <div class="space-y-2">
                 <span class="block text-[11px] font-medium text-slate-400">Recents</span>
                 <div id="chatHistory" class="space-y-1 overflow-y-auto max-h-[45vh] pr-1"></div>
             </div>
         </div>
 
-        <!-- Minimalist Footer -->
         <div class="pt-4 border-t border-slate-800/40">
             <button onclick="clearAllHistory()" class="w-full text-xs text-slate-500 hover:text-red-400 transition flex items-center justify-center space-x-2 py-2 rounded-lg hover:bg-red-500/10">
                 <i class="fa-regular fa-trash-can text-xs"></i>
@@ -195,9 +193,9 @@
         </div>
     </aside>
 
-    <!-- Main Chat Container -->
-    <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center" id="chatContainer">
-        <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
+    <!-- Main Chat Container (Responsive Fit-To-Screen) -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full flex flex-col justify-start" id="chatContainer">
+        <div id="welcomeScreen" class="my-auto flex flex-col items-center justify-center text-center px-4 py-8">
             <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
                 <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
             </div>
@@ -209,7 +207,7 @@
     </main>
 
     <!-- Attachment Preview Area -->
-    <div id="attachmentPreview" class="hidden max-w-2xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between">
+    <div id="attachmentPreview" class="hidden max-w-3xl mx-auto px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between w-full">
         <div class="flex items-center space-x-2 truncate">
             <i id="attachmentIcon" class="fa-solid fa-file text-indigo-400"></i>
             <span id="attachmentName" class="text-xs text-slate-300 truncate">file_name.png</span>
@@ -220,9 +218,9 @@
     </div>
 
     <!-- Input Footer -->
-    <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0">
-        <div class="max-w-2xl mx-auto space-y-2">
-            <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-3 shadow-lg">
+    <footer class="p-3 md:p-4 bg-[#0f172a] shrink-0 border-t border-slate-800/50">
+        <div class="max-w-3xl mx-auto space-y-2">
+            <div class="bg-[#212c3d] border border-slate-700/60 rounded-2xl flex items-center px-4 py-2.5 shadow-lg">
                 <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
                 <button onclick="document.getElementById('fileInput').click()" class="text-slate-400 hover:text-slate-200 pr-3 transition" title="Attach file">
                     <i class="fa-solid fa-paperclip text-lg"></i>
@@ -242,7 +240,7 @@
                     <i class="fa-solid fa-paper-plane text-lg"></i>
                 </button>
             </div>
-            <div class="text-center text-xs text-slate-400">
+            <div class="text-center text-[11px] text-slate-500">
                 S.E.A.N. AI can make mistakes.
             </div>
         </div>
@@ -312,10 +310,9 @@
         let isImageMode = false;
         let confirmCallback = null;
 
-        // Swipe Gesture Variables
         let touchStartX = 0;
         let touchEndX = 0;
-        const swipeMinDistance = 60; // Pixels distance to trigger swipe
+        const swipeMinDistance = 60;
 
         document.addEventListener('DOMContentLoaded', () => {
             setupSidebar();
@@ -348,7 +345,6 @@
             });
         });
 
-        /* --- Mobile Swipe Gesture Handler --- */
         function setupSwipeGesture() {
             document.addEventListener('touchstart', (e) => {
                 touchStartX = e.changedTouches[0].screenX;
@@ -365,20 +361,17 @@
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
 
-            // Slide Left (Swipe papuntang Kaliwa) -> Bubuksan ang Sidebar Menu
             if (swipeDistance < -swipeMinDistance) {
                 sidebar.classList.remove('translate-x-full');
                 overlay.classList.remove('hidden');
             }
 
-            // Slide Right (Swipe papuntang Kanan) -> Isasara ang Sidebar Menu
             if (swipeDistance > swipeMinDistance) {
                 sidebar.classList.add('translate-x-full');
                 overlay.classList.add('hidden');
             }
         }
 
-        /* --- Custom Confirmation Modal --- */
         function clearAllHistory() {
             showConfirmModal(() => {
                 chatSessions = {};
@@ -418,7 +411,6 @@
             }, 150);
         }
 
-        /* --- Image Generation Mode Toggle --- */
         function toggleImageMode() {
             isImageMode = !isImageMode;
             const btn = document.getElementById('imageToggleBtn');
@@ -435,7 +427,7 @@
             }
         }
 
-        /* --- Image Generation & Renderer --- */
+        /* --- Fixed Image Generator Function --- */
         async function generateImage(promptText) {
             const session = chatSessions[currentSessionId];
             const aiBubble = appendBubble('assistant', '', 'Image AI Generator');
@@ -449,16 +441,20 @@
             `;
 
             try {
-                const cleanPrompt = encodeURIComponent(promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture/gi, '').trim());
-                const imageUrl = `https://pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+                let cleanPrompt = promptText.replace(/generate image|gawan mo ako ng larawan|draw|picture of|create/gi, '').trim();
+                if (!cleanPrompt) cleanPrompt = "cool scenic view";
+
+                const seed = Math.floor(Math.random() * 1000000);
+                const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
 
                 const img = new Image();
+                img.crossOrigin = "anonymous";
                 img.src = imageUrl;
 
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
-                    img.onerror = reject;
-                    setTimeout(() => reject(new Error('Generation Timeout')), 15000);
+                    img.onerror = () => reject(new Error('Failed to load image from server'));
+                    setTimeout(() => reject(new Error('Generation Timeout')), 20000);
                 });
 
                 const renderHTML = `
@@ -480,7 +476,7 @@
                 contentDiv.innerHTML = `
                     <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. Na-cancel ang request. (${err.message})</span>
+                        <span>[IMAGE GENERATION ERROR]: Hindi ma-generate ang larawan. (${err.message || 'Error occurred'})</span>
                     </div>
                 `;
             } finally {
@@ -660,9 +656,9 @@
             container.innerHTML = '';
             const session = chatSessions[currentSessionId];
             if (!session || session.messages.length === 0) {
-                container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full flex flex-col justify-center";
+                container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full flex flex-col justify-start";
                 container.innerHTML = `
-                    <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4 my-auto py-8">
+                    <div id="welcomeScreen" class="my-auto flex flex-col items-center justify-center text-center px-4 py-8">
                         <div class="w-20 h-20 bg-indigo-600/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 animate-pulse">
                             <i class="fa-solid fa-brain text-4xl text-indigo-400"></i>
                         </div>
@@ -674,7 +670,7 @@
                 return;
             }
 
-            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full";
             session.messages.forEach(m => appendBubble(m.role, m.content, m.providerLabel, m.file));
             container.scrollTop = container.scrollHeight;
         }
@@ -695,7 +691,7 @@
             if (welcome) welcome.remove();
 
             const container = document.getElementById('chatContainer');
-            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full";
+            container.className = "flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl mx-auto w-full";
 
             const session = chatSessions[currentSessionId];
             if (session.messages.length === 0) {
@@ -714,7 +710,7 @@
 
             container.scrollTop = container.scrollHeight;
 
-            const isImageKeyword = /generate image|gawan mo ako ng larawan|draw|picture of/gi.test(text);
+            const isImageKeyword = /generate image|gawan mo ako ng larawan|draw|picture|create image/gi.test(text);
 
             if (isImageMode || isImageKeyword) {
                 if (isImageMode) toggleImageMode();
