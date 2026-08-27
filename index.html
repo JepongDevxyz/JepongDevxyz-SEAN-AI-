@@ -145,6 +145,56 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
+
+        /* Toggle Switch Styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .3s ease;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #ffffff;
+            transition: .3s ease;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #6366f1;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed !important;
+            border-color: #1e293b !important;
+        }
     </style>
 </head>
 <body class="flex flex-col h-[100dvh] w-screen overflow-hidden antialiased bg-[#0f172a]">
@@ -180,12 +230,17 @@
                 </button>
             </div>
 
+            <!-- AI Model Dropdown -->
             <div class="space-y-2">
-                <label class="block text-[11px] font-medium text-slate-400">AI Model</label>
+                <div class="flex justify-between items-center">
+                    <label class="block text-[11px] font-medium text-slate-400">AI Model</label>
+                    <span id="modelStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">Single</span>
+                </div>
+                
                 <div class="relative">
                     <button id="dropdownBtn" onclick="toggleDropdown()" class="w-full bg-slate-900/80 text-slate-200 text-xs rounded-xl border border-slate-800 px-3.5 py-3 flex items-center justify-between hover:border-indigo-500/40 transition">
                         <span id="selectedProviderText" class="truncate font-medium">Gemini 2.5 Flash</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-2"></i>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-2" id="dropdownArrow"></i>
                     </button>
 
                     <div id="dropdownMenu" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden py-1 max-h-60 overflow-y-auto">
@@ -213,14 +268,27 @@
                 </div>
             </div>
 
-            <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/10">
+            <!-- Auto-Shuffle Toggle Block -->
+            <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between">
+                <div>
+                    <span class="block text-xs font-medium text-slate-200">Shuffle Mode</span>
+                    <p class="text-[10px] text-slate-500 max-w-[170px] leading-tight mt-0.5">Auto-fallback to working models if current model fails</p>
+                </div>
+                
+                <label class="switch">
+                    <input type="checkbox" id="shuffleToggle" onchange="handleShuffleToggle(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/10 mt-4">
                 <i class="fa-solid fa-plus text-xs"></i>
                 <span class="text-xs">New Chat</span>
             </button>
 
             <div class="space-y-2">
                 <span class="block text-[11px] font-medium text-slate-400">Recents</span>
-                <div id="chatHistory" class="space-y-1 overflow-y-auto max-h-[45vh] pr-1"></div>
+                <div id="chatHistory" class="space-y-1 overflow-y-auto max-h-[35vh] pr-1"></div>
             </div>
         </div>
 
@@ -352,6 +420,7 @@
         let currentSessionId = localStorage.getItem('sean_current_session') || null;
         let selectedProvider = savedProvider.value;
         let selectedProviderLabel = savedProvider.label;
+        let isShuffleActive = false;
 
         let recognition = null;
         let isRecording = false;
@@ -372,6 +441,14 @@
             setupSwipeGesture();
             setupSmartAutoScroll();
             updateProviderUI();
+
+            // Load saved shuffle mode state
+            const savedShuffle = localStorage.getItem('sean_shuffle_mode') === 'true';
+            const shuffleToggle = document.getElementById('shuffleToggle');
+            if (shuffleToggle) {
+                shuffleToggle.checked = savedShuffle;
+                handleShuffleToggle(savedShuffle);
+            }
 
             const tx = document.getElementById('userInput');
             tx.addEventListener('input', function() {
@@ -397,6 +474,41 @@
                 }
             });
         });
+
+        function handleShuffleToggle(isChecked) {
+            isShuffleActive = isChecked;
+            localStorage.setItem('sean_shuffle_mode', isChecked);
+
+            const dropdownBtn = document.getElementById('dropdownBtn');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const statusBadge = document.getElementById('modelStatusBadge');
+
+            if (isChecked) {
+                dropdownBtn.classList.add('btn-disabled');
+                dropdownMenu.classList.add('hidden');
+                statusBadge.innerText = 'Auto-Shuffle';
+                statusBadge.className = 'text-[10px] px-2 py-0.5 rounded bg-indigo-600/30 text-indigo-300 font-mono border border-indigo-500/40';
+            } else {
+                dropdownBtn.classList.remove('btn-disabled');
+                statusBadge.innerText = 'Single';
+                statusBadge.className = 'text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono';
+            }
+        }
+
+        function toggleDropdown() {
+            if (isShuffleActive) return; // Locked kapag naka-ON ang Shuffle Mode
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function selectProvider(value, label) {
+            if (isShuffleActive) return; // Huwag payagang magpalit kapag locked
+            selectedProvider = value;
+            selectedProviderLabel = label;
+            localStorage.setItem('sean_selected_provider', JSON.stringify({ value, label }));
+            updateProviderUI();
+            document.getElementById('dropdownMenu').classList.add('hidden');
+        }
 
         function getThinkingOrbHTML(label = "Thinking...") {
             return `
@@ -580,19 +692,6 @@
             session.messages.push({ role: 'assistant', content: renderHTML, providerLabel: 'Image AI Generator' });
             saveSessions();
             scrollToBottom();
-        }
-
-        function toggleDropdown() {
-            const menu = document.getElementById('dropdownMenu');
-            menu.classList.toggle('hidden');
-        }
-
-        function selectProvider(value, label) {
-            selectedProvider = value;
-            selectedProviderLabel = label;
-            localStorage.setItem('sean_selected_provider', JSON.stringify({ value, label }));
-            updateProviderUI();
-            document.getElementById('dropdownMenu').classList.add('hidden');
         }
 
         function updateProviderUI() {
@@ -813,9 +912,8 @@
 
             scrollToBottom(true);
 
-            // GAGANA LAMANG ANG IMAGE GENERATION KAPAG NAKA-SELECT/ENABLE ANG IMAGE MODE BUTTON
             if (isImageMode) {
-                toggleImageMode(); // Ise-reset pabalik sa normal pagkatapos mag-generate
+                toggleImageMode();
                 await generateImage(text);
             } else {
                 await fetchAiResponse();
@@ -826,7 +924,8 @@
 
         async function fetchAiResponse() {
             const session = chatSessions[currentSessionId];
-            const aiBubble = appendBubble('assistant', '', selectedProviderLabel);
+            const currentBadgeLabel = isShuffleActive ? 'Auto-Shuffle Mode' : selectedProviderLabel;
+            const aiBubble = appendBubble('assistant', '', currentBadgeLabel);
             const contentDiv = aiBubble.querySelector('.content-body');
 
             contentDiv.innerHTML = getThinkingOrbHTML("Thinking...");
@@ -841,7 +940,8 @@
                     body: JSON.stringify({ 
                         system_prompt: SYSTEM_PROMPT,
                         messages: session.messages, 
-                        provider: selectedProvider 
+                        provider: selectedProvider,
+                        shuffle: isShuffleActive // Pinapasa ang Shuffle State
                     })
                 });
 
@@ -860,7 +960,7 @@
                 session.messages.push({ 
                     role: 'assistant', 
                     content: resultText,
-                    providerLabel: selectedProviderLabel 
+                    providerLabel: currentBadgeLabel 
                 });
 
             } catch (err) {
